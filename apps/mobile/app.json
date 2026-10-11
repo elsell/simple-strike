@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Simple Strike",
+    "slug": "simple-strike",
+    "version": "1.0.0",
+    "scheme": "simplestrike",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b145a"
+    },
+    "runtimeVersion": { "policy": "appVersion" },
+    "updates": { "enabled": false, "checkAutomatically": "NEVER" },
+    "plugins": ["expo-router", "expo-secure-store", "expo-dev-client"],
+    "ios": {
+      "bundleIdentifier": "com.elsell.simplestrike",
+      "buildNumber": "1",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.elsell.simplestrike",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0b145a"
+      }
+    },
+    "web": { "favicon": "./assets/favicon.png" }
+  }
+}

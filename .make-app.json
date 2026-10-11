@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 4,
+  "generatorVersion": "v0.5.14",
+  "name": "Simple Strike",
+  "slug": "simple-strike",
+  "bundlePrefix": "com.elsell",
+  "module": "github.com/elsell/simple-strike",
+  "domains": []
+}
