@@ -170,5 +170,6 @@ export function retainedSessionExpiry(value: unknown, fallback: string): string 
   return isValidSessionCredential(value) ? value.expiresAt : fallback;
 }
 
-export { MapSession, type MapPosition, type MapSnapshot } from './map-session.js';
-export { closestStrike, distanceMeters, type Strike, type StrikeDistance, type Eligibility, type Clock } from './closest-strike.js';
+export { MapSession, type MapPosition, type MapSnapshot } from './map-session';
+export { LightningFeed, type FeedSnapshot, type FeedSource, type FeedObserver } from './lightning-feed';
+export { closestStrike, distanceMeters, type Strike, type StrikeDistance, type Eligibility, type Clock } from './closest-strike';

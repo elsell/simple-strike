@@ -3,6 +3,7 @@ export type MapSnapshot = {
   vehicle: MapPosition;
   center: MapPosition;
   following: boolean;
+  radiusMeters: number;
 };
 
 /** Client interaction state. Route computation and device location belong to ports. */
@@ -10,6 +11,7 @@ export class MapSession {
   private vehicle: MapPosition;
   private center: MapPosition;
   private following = true;
+  private radiusMeters = 20 * 1609.344;
 
   constructor(initialPosition: MapPosition) {
     this.vehicle = { ...initialPosition };
@@ -24,6 +26,19 @@ export class MapSession {
   explore(center: MapPosition): void {
     this.following = false;
     this.center = { ...center };
+  }
+
+  zoomIn(): void {
+    this.scaleRadius(0.5);
+  }
+
+  zoomOut(): void {
+    this.scaleRadius(2);
+  }
+
+  private scaleRadius(factor: number): void {
+    const next = this.radiusMeters * factor;
+    if (Number.isFinite(next) && next > 0) this.radiusMeters = next;
   }
 
   recenter(): void {
@@ -41,6 +56,7 @@ export class MapSession {
       vehicle: { ...this.vehicle },
       center: { ...this.center },
       following: this.following,
+      radiusMeters: this.radiusMeters,
     };
   }
 }

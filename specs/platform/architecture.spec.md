@@ -316,3 +316,25 @@ Go module can build its own server executable without importing internal package
 when `external` is selected without a factory. Selecting `demo` must not execute
 an external factory. All source variants must use the same session, authorization,
 audit, and HTTP composition. A private entrypoint owns its provider configuration.
+
+## Map viewport state
+
+The shared map session must own the viewport radius as well as its center and
+following state. It starts at 20 statute miles (32186.88 meters). Zoom controls
+multiply or divide the radius by two without changing following state or vehicle
+position. Recenter and End Route must preserve the selected radius. A non-finite
+or non-positive radius update must leave the previous radius intact.
+
+## Client feed request lifecycle
+
+The client must allow at most one feed read in flight for a mounted feed session.
+Stopping that session must cancel its request and suppress late success or failure
+notifications, even if a transport ignores cancellation. Signing out or changing
+the backend must stop the old feed session before creating another. Request
+failures must preserve their original classification for the presentation and
+session layers. This lifecycle does not select retry timing or stale-data policy.
+
+Shared client packages exported as TypeScript source must use bundler-compatible
+module resolution. Their runtime imports must resolve in Metro and the web
+bundler without generated JavaScript files. Type checks alone are insufficient;
+mobile exports must verify the source package boundary.

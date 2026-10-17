@@ -1,4 +1,4 @@
-import type { MapPosition } from './map-session.js';
+import type { MapPosition } from './map-session';
 
 export type Strike = {
   id: string;

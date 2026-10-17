@@ -7,7 +7,6 @@ import StrikeMap, { type MapCoordinate, type MapRing } from '../modules/strike-m
 export type DrivingMapProps = {
   map: MapSnapshot;
   feed: LightningSnapshot;
-  radiusMeters: number;
   rings: MapRing[];
   translator: Translator;
   locationEnabled: boolean;
@@ -26,7 +25,7 @@ export default function DrivingMap(props: DrivingMapProps) {
     <StrikeMap
       style={StyleSheet.absoluteFill}
       center={props.map.center}
-      radiusMeters={props.radiusMeters}
+      radiusMeters={props.map.radiusMeters}
       strikes={props.feed.strikes.map(strike => ({ id: strike.id, ...strike.position }))}
       rings={props.rings}
       locationEnabled={props.locationEnabled}

@@ -35,3 +35,22 @@ test('rejects malformed coordinates', async context => {
   const backend = await service(context, 200, { data: { mode: 'demo', observations: [{ ...observation, latitude: 100 }] } });
   await assert.rejects(createLightningApiClient(backend.url, () => 'session').read(), /invalid lightning response/);
 });
+
+test('cancels an in-flight feed request through the real HTTP transport', async context => {
+  const server = createServer();
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  context.after(() => new Promise<void>((resolve, reject) => {
+    server.closeAllConnections();
+    server.close(error => error ? reject(error) : resolve());
+  }));
+  const address = server.address();
+  if (!address || typeof address === 'string') throw new Error('missing address');
+  const incoming = once(server, 'request');
+  const controller = new AbortController();
+  const request = createLightningApiClient(`http://127.0.0.1:${address.port}`, () => 'session').read(controller.signal);
+  const rejected = assert.rejects(request, error => (error as Error).name === 'AbortError');
+  await incoming;
+  controller.abort();
+  await rejected;
+});
