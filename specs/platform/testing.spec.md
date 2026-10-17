@@ -328,6 +328,10 @@ DigestAlgorithm element-count check. An isolated test on 2026-10-17 reproduced
 acceptance of its malformed signature with the unmodified 1.4.0 package, using
 default verification options. The candidate rejected that signature and accepted
 valid SHA-256, SHA-384, and SHA-512 signatures while rejecting altered messages.
-This candidate is not installed in the application. Full upstream regression
-coverage and review remain required before adopting it. The audit finding remains
-open; this experiment is not a security-gate exception.
+The upstream RSA suite passed against the isolated candidate: 101 passing and
+four upstream pending cases, using Mocha 11.7.5. The dependency backport must
+contain only the upstream nested element-count validation. An installed-consumer
+regression check must reject the published malformed-signature vector, accept
+valid signatures, and reject altered messages. Final review remains required.
+The audit finding remains open until the backport is reviewed and its treatment
+in the security gate is explicitly documented. It must not be silently excluded.

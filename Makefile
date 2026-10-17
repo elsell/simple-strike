@@ -20,6 +20,7 @@ generate:
 check:
 	node scripts/check-brace-compat.mjs
 	node scripts/check-uri-decoder.mjs
+	node scripts/check-rsa-verification.mjs
 	bash scripts/verify-lightning-extension.sh
 	./scripts/plan-release_test.sh
 	./scripts/test-start-postgres-for-acceptance.sh
