@@ -277,3 +277,35 @@ before merge. This exception does not waive those checks.
 The configured OTLP endpoint is a collector base URL. The adapter must append
 `/v1/traces` and `/v1/metrics` explicitly, preserving any configured path prefix,
 so exporter version changes cannot send both signal types to the collector root.
+
+## SDK 55 native compatibility repair
+
+Native compilation must use the SDK 55 patch set reported by Expo compatibility
+validation: Expo 55.0.31, auth-session 55.0.18, crypto 55.0.19, dev-client 55.0.40,
+linking 55.0.17, localization 55.0.19, router 55.0.18, secure-store 55.0.18,
+system-ui 55.0.22, updates 55.0.33, and web-browser 55.0.20. All versions must be
+exactly pinned. The frozen lockfile, native compatibility check, type checks,
+OIDC client tests, package audit, age gate, and native builds must verify this
+update. This repairs a demonstrated native build blocker, not an SDK major upgrade.
+
+Transitive Expo overrides must match the updated SDK requirements. In particular,
+auth-session must resolve the same crypto and web-browser versions as the app.
+The exact config, prebuild, schema, asset, file-system, and Babel pins must satisfy
+the new Expo and CLI manifests. Doctor must reject duplicate native modules.
+
+The JavaScript security gate must use fixed releases for the advisories found in
+the inherited lockfile. Required minimums are shell-quote 1.11.0, fast-uri 3.1.8,
+brace-expansion 5.0.12, js-yaml 3.15.2 or 4.3.2 within its existing major version,
+nanoid 3.3.18, browserslist 4.28.7, xmldom 0.8.15 or 0.9.12 within its existing
+minor series, image-size 2.0.3, devalue 5.9.3, node-forge 1.4.1, braces 3.0.4,
+source-map-js 1.2.2, compression 1.8.2, Joi 17.13.8, PostCSS 8.5.23,
+SvelteKit 2.70.2, decode-uri-component 0.4.3, baseline-browser-mapping 2.11.0,
+moment 2.31.0, and sprintf-js 1.1.4. Preserve the legacy callable brace-expansion
+adapter and verify both legacy and modern consumers. These changes require a
+clean package audit, the age gate, workspace tests and builds, native compatibility
+validation, and native compilation before merge.
+
+The registry does not yet publish the advertised fixed versions for node-forge,
+braces, decode-uri-component, or sprintf-js. Their findings remain unresolved.
+Do not invent package versions or suppress the audit. Resolve them with a verified
+upstream release or a separately reviewed backport before the merge gate passes.

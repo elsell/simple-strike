@@ -18,6 +18,7 @@ generate:
 	pnpm --dir packages/api-client generate
 
 check:
+	node scripts/check-brace-compat.mjs
 	bash scripts/verify-lightning-extension.sh
 	./scripts/plan-release_test.sh
 	./scripts/test-start-postgres-for-acceptance.sh

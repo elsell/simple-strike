@@ -67,3 +67,9 @@ the arm64 inventory has 281. Their SPDX blob digests are, respectively:
 Signature and inventory checks do not prove absence of vulnerabilities. The CVE
 report review, resolved application vulnerability scan, and production-image
 build verification remain required before this candidate is ready to merge.
+
+The initial Grype scans of both platform SBOMs report high-severity matches.
+The inventories include both source versions and RPM release versions, so a
+package-name match alone is not sufficient to decide whether a backported fix
+is present. Findings against the installed image and the final runtime image
+remain unresolved. No scanner exclusion or vulnerability waiver has been added.
