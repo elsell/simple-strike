@@ -4,7 +4,7 @@ import MapKit
 final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegate {
   private let map = MKMapView()
   private var radius = 32186.88
-  private var center = CLLocationCoordinate2D(latitude: 27.95, longitude: -82.46)
+  private var mapCenter = CLLocationCoordinate2D(latitude: 27.95, longitude: -82.46)
   private var annotations: [String: MKPointAnnotation] = [:]
   private var rings: [String: ThunderOverlay] = [:]
   let onExplore = EventDispatcher()
@@ -73,9 +73,9 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   func updateCenter(_ value: CoordinateRecord) {
     let coordinate = CLLocationCoordinate2D(latitude: value.latitude, longitude: value.longitude)
     guard CLLocationCoordinate2DIsValid(coordinate) else { return }
-    guard center.latitude != coordinate.latitude || center.longitude != coordinate.longitude else { return }
-    center = coordinate
-    map.setCenter(center, animated: true)
+    guard mapCenter.latitude != coordinate.latitude || mapCenter.longitude != coordinate.longitude else { return }
+    mapCenter = coordinate
+    map.setCenter(mapCenter, animated: true)
   }
 
   func updateRadius(_ value: Double) {
@@ -85,7 +85,7 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   }
 
   private func applyRegion() {
-    map.setRegion(MKCoordinateRegion(center: center, latitudinalMeters: radius * 2, longitudinalMeters: radius * 2), animated: false)
+    map.setRegion(MKCoordinateRegion(center: mapCenter, latitudinalMeters: radius * 2, longitudinalMeters: radius * 2), animated: false)
   }
 
   func updateStrikes(_ values: [StrikeRecord]) {
@@ -156,8 +156,8 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     guard explorationActive else { return }
     explorationActive = false
-    center = mapView.centerCoordinate
-    onExplore(["latitude": center.latitude, "longitude": center.longitude])
+    mapCenter = mapView.centerCoordinate
+    onExplore(["latitude": mapCenter.latitude, "longitude": mapCenter.longitude])
   }
 }
 
