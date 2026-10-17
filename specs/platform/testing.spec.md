@@ -319,3 +319,15 @@ receive the callable decoder. The upstream decoding algorithm must remain intact
 Verify valid Unicode and malformed percent-encoded input through the installed
 query-string consumer, with a bounded subprocess timeout. Verify CommonJS and
 ES module access to the decoder.
+
+### RSA backport candidate
+
+The unmerged [upstream fix](https://github.com/digitalbazaar/forge/pull/1152)
+at commit `ceba34402e329f0365134f23fe19898756527d65` adds the missing nested
+DigestAlgorithm element-count check. An isolated test on 2026-10-17 reproduced
+acceptance of its malformed signature with the unmodified 1.4.0 package, using
+default verification options. The candidate rejected that signature and accepted
+valid SHA-256, SHA-384, and SHA-512 signatures while rejecting altered messages.
+This candidate is not installed in the application. Full upstream regression
+coverage and review remain required before adopting it. The audit finding remains
+open; this experiment is not a security-gate exception.
