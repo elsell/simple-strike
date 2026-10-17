@@ -1,0 +1,28 @@
+issuer: http://localhost:5556/dex
+storage:
+  type: memory
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins: [http://localhost:5173]
+staticClients:
+  - id: simple-strike-web
+    name: Simple Strike Web
+    public: true
+    redirectURIs: [http://localhost:5173/callback]
+  - id: simple-strike-mobile
+    name: Simple Strike Mobile
+    public: true
+    redirectURIs: [simplestrike://callback]
+  - id: simple-strike-docs
+    name: Simple Strike API Docs
+    public: true
+    redirectURIs: [http://localhost:8080/docs]
+enablePasswordDB: true
+staticPasswords:
+  - email: demo@example.com
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: demo
+    userID: 00000000-0000-0000-0000-000000000010
+oauth2:
+  skipApprovalScreen: true
+  passwordConnector: local

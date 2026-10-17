@@ -77,7 +77,7 @@ The release gate runs Go vulnerability analysis and the package-manager audit
 against the resolved dependency graph. CI has least-privilege permissions,
 bounded runtime, and cancels superseded work. High or critical dependency
 findings at any severity fail delivery rather than being silently accepted.
-The API dependency graph pins `golang.org/x/net v0.55.0`, excluding the
+The API dependency graph pins `golang.org/x/net v0.60.0`, excluding the
 GO-2026-5026-affected v0.53.0 release from generated modules and images.
 Release image scans use the locally installed Grype 0.111.1 executable from a
 checksum-verified immutable release archive. Scanner bootstrap must not execute a
@@ -215,12 +215,6 @@ and `expo-linking 55.0.16`. Their compensating checks are exact pins, resolved
 lockfile review, a clean vulnerability audit, Expo compatibility validation,
 mobile type checking, and live OIDC/API acceptance as applicable.
 
-The generated API directly pins `google.golang.org/grpc 1.82.1` to remove
-GO-2026-6061 from its callable HTTP/2 and xDS graph. Because that security fix
-is inside the normal fourteen-day observation window, its exact reviewed age
-exception is compensated by generated Go tests, race tests, `govulncheck`, live
-API/SpiceDB acceptance, Docker builds, and the hosted generation matrix.
-
 The structural gate rejects oversized handwritten Go files, mocks, ad hoc print
 calls, direct SQL helpers, environment reads outside configuration/bootstrap,
 floating CI action references, and container images without immutable digests.
@@ -264,3 +258,22 @@ acceptance exercises bridge-network service discovery and the OIDC backchannel
 without weakening public issuer validation. Acceptance cleanup removes its
 project-scoped containers, volumes, and locally built images so repeated clean
 runs do not exhaust a development or CI host.
+
+## Demo slice security gate repairs
+
+The demo slice must not publish with the inherited vulnerable Go graph. The
+compiler must use Go 1.26.9 or a later reviewed patch. The API graph must use
+`golang.org/x/net` v0.60.0, `golang.org/x/text` v0.42.0, OpenTelemetry v1.45.0,
+and gRPC v1.83.2 or later reviewed fixed releases. These pins address the current
+Go vulnerability database findings, including GO-2026-6617, GO-2026-6629,
+GO-2026-6505, GO-2026-6443, and GO-2026-6348. Verification must include the resolved
+graph vulnerability scan, application and boundary tests, and image build checks.
+The exact `golang.org/x/net` v0.60.0 security release has an age exception because
+it fixes reachable HTTP/2 denial-of-service findings. The module proxy records its
+release on 2026-10-08. The allowlist requires application tests, race tests, the
+resolved vulnerability scan, live API/SpiceDB acceptance, and Docker build checks
+before merge. This exception does not waive those checks.
+
+The configured OTLP endpoint is a collector base URL. The adapter must append
+`/v1/traces` and `/v1/metrics` explicitly, preserving any configured path prefix,
+so exporter version changes cannot send both signal types to the collector root.

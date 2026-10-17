@@ -58,8 +58,8 @@ make mobile-build-ios      # unsigned iOS simulator app through Xcode
 ```
 
 Bundle export is useful but is not a native build. Generated CI compiles Android
-on Linux. It compiles iOS on macOS for trusted pushes to `main` and manual runs;
-pull requests perform platform-neutral validation without signing access.
+on Linux. Affected pull requests and main-branch changes compile iOS on macOS without
+signing access. Native compilation is separate from signed device acceptance.
 
 ## Release configuration
 
@@ -87,8 +87,8 @@ automatic; review and submit signed artifacts deliberately.
 The Expo SDK 55 profile selects the reviewed
 `ubuntu-24.04-jdk-17-ndk-r27b-sdk-55` Android image and
 `macos-sequoia-15.6-xcode-26.2` iOS image. Local iOS builds install the exact
-CocoaPods 1.16.2 graph from `Gemfile.lock`; generated CI pins Ruby 3.2.9 and the
-JDK patch as well. The dependency-age and OSV gates inspect every locked Ruby
+CocoaPods 1.16.2 graph from `Gemfile.lock`; hosted iOS CI selects Ruby 3.4 and the Android job pins the
+JDK patch. The dependency-age and OSV gates inspect every locked Ruby
 gem, and `make-app doctor` checks the Ruby/Bundler versions used by local builds.
 Hosted iOS compilation uses GitHub's `macos-26` runner to satisfy Expo SDK 55's
 Xcode 26 requirement.
@@ -111,3 +111,41 @@ rejection, revocation, or malformed secure storage removes it. Product-specific
 offline data and mutation synchronization remain application concerns. Cold
 launch reads secure storage before OIDC discovery succeeds, so an existing valid
 application session can enter offline mode without provider connectivity.
+
+## Simple Strike iOS and CarPlay verification
+
+Simple Strike uses a local Expo module under `apps/mobile/modules/strike-map`.
+It exposes MapKit map rendering, location events, and driving-route calculation.
+After native source changes, rebuild the development client. A Metro reload does
+not compile Swift changes. The module is not available in Expo Go.
+
+The signed-in map screen, complete route guidance, and CarPlay scene remain in
+progress. MapKit route calculation alone does not provide verified turn-by-turn
+navigation. Do not describe the current adapter as a finished CarPlay app.
+
+Before requesting Apple review:
+
+1. Demonstrate destination entry, route progress, spoken maneuvers, rerouting,
+   and End Route. Verify that End Route returns to location following.
+2. Verify CarPlay connection, disconnection, and cold launch. Test the map controls,
+   location following, and guidance with the phone locked as permitted by iOS.
+3. Request the navigation capability through the
+   [Apple CarPlay developer program](https://developer.apple.com/carplay/).
+   Provisioning and device tests require the developer account and granted access.
+4. Supply a reachable HTTPS demo backend and OIDC issuer with the published demo
+   credentials. Keep simulated observations visibly labeled in every client.
+5. Explain that operators host one backend with one configured data adapter.
+   Describe both demo and real-data connections. A reviewer must be able to test
+   the intended functions; demo mode must not conceal live-data functionality.
+6. Complete privacy disclosures from the implemented network and storage behavior.
+   Verify that provider credentials remain on the backend and location coordinates
+   are not sent in lightning-feed requests.
+7. Produce and test a signed build, then submit the entitlement and store materials.
+   A local build, TestFlight upload, or unsigned simulator test is not evidence of
+   Apple approval.
+
+Apple supplies the navigation map surface through
+[CPWindow](https://developer.apple.com/documentation/carplay/cpwindow) and the
+control layer through
+[CPMapTemplate](https://developer.apple.com/documentation/carplay/cpmaptemplate).
+Keep native CarPlay verification separate from the earlier browser prototype.

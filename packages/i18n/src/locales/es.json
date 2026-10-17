@@ -25,5 +25,13 @@
   "examples.create": "Crear ejemplo",
   "examples.created": "Ejemplo creado.",
   "examples.count_one": "{{count}} ejemplo",
-  "examples.count_other": "{{count}} ejemplos"
+  "examples.count_other": "{{count}} ejemplos",
+  "map.demo": "Rayos simulados",
+  "map.live": "Rayos en directo",
+  "map.following": "Siguiendo el vehículo",
+  "map.exploring": "Explorando el mapa",
+  "map.zoomIn": "Acercar",
+  "map.zoomOut": "Alejar",
+  "map.recenter": "Volver a centrar",
+  "map.locationPermission": "Usar tu ubicación para centrar el mapa y proporcionar indicaciones de ruta."
 }

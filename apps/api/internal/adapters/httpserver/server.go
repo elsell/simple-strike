@@ -227,6 +227,7 @@ func New(application app.App, domains []string, options Options) (http.Handler, 
 		}
 		return &NoContentOutput{Status: http.StatusNoContent}, nil
 	})
+	registerLightningRoutes(api, application)
 	registerAuditRoutes(api, application)
 	registerAuthorizationRecoveryRoutes(api, application)
 	registerInvitationRoutes(api, application)

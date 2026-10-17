@@ -200,4 +200,13 @@ result = check({
 });
 assert.equal(result.status, 0, result.stderr);
 
+result = check({
+  'apps/mobile/src/map.ts': "import Map from '../modules/strike-map'; export default Map;",
+  'apps/mobile/modules/strike-map/index.ts': "import { requireNativeView } from 'expo'; export default requireNativeView('StrikeMap');",
+});
+assert.equal(result.status, 0, result.stderr);
+
+result = check({ 'apps/mobile/modules/strike-map/network.ts': "fetch('/v1/lightning/strikes');" });
+assert.notEqual(result.status, 0, 'Native module wrappers must not bypass the API client');
+
 console.log('client API boundary rejects alternate transports and allows only exact provider adapters');

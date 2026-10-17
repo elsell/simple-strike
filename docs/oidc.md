@@ -23,3 +23,25 @@ does not change token issuer validation.
 Set `SIMPLE_STRIKE_OIDC_INSECURE=false` in production. Verify sign-in, session
 exchange, refresh, revocation, account disablement, provider key rotation, and
 provider unavailability before launch.
+
+## Shared demo sign-in
+
+The product uses OIDC for both demo and operator-hosted backends. The local demo
+identity overlay replaces the development test users with one published Dex user:
+
+- Sign-in email: `demo@example.com`
+- Password: `password`
+
+These are deliberately public demo credentials, not a private secret. The account
+has no configured invitation-administrator identity. Self-deactivation is disabled
+for the shared demo account. The normal PKCE and session exchange flow still applies.
+
+Use `docker compose -f compose.yaml -f compose.demo.yaml config` to inspect the
+local configuration. The overlay enables the simulated lightning source and grants
+authenticated users read access to that feed. The protected HTTP feed, session
+exchange, and audit path have an integration check in
+`scripts/verify-demo-feed.py`. The complete mobile interface remains in progress.
+
+Do not use these credentials for a real-data deployment. Configure the operator's
+OIDC provider instead. For a hosted demo, set HTTPS issuer, origin, and redirect
+URLs before deployment; the included Dex file uses localhost for local testing.

@@ -1,5 +1,19 @@
 # Identity and Access Specification
 
+## Approved product sign-in
+
+Simple Strike must use OIDC sign-in for self-hosted backends. The demo deployment
+must ship Dex by default with a published shared username and password. Demo users
+must follow the same authorization-code, PKCE, and application-session flow as
+other users. A known demo password must not bypass token validation or session
+exchange. Provider subscription credentials remain separate server-side secrets.
+
+The shared demo identity is for simulated data. Public demo credentials must not
+be granted administrator privileges or access to private provider subscriptions.
+The local demo configuration must remain separate from operator production identity
+configuration. Internet deployment must use HTTPS and correctly registered public
+issuer and redirect URLs; the checked-in localhost URLs are not a hosted deployment.
+
 ## Authentication
 
 The API accepts provider-signed OIDC ID tokens only at the session-exchange

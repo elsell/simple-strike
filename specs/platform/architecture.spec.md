@@ -229,3 +229,90 @@ PostgreSQL is the sole time authority for authorization outbox leases so clock
 skew between API replicas cannot steal, extend, or complete another claim.
 Create responses are not successful until their owner relationship has been
 written; durable pending work remains retryable when SpiceDB is unavailable.
+
+## Lightning provider extension boundary
+
+The provider SDK lives in `apps/api/pkg/lightning`, outside Go's `internal`
+visibility boundary, so separately maintained adapters can import it. Domain
+observations contain a source-local identifier, WGS84 coordinates, and an occurrence
+time. A source returns a batch labeled demo or live. That label describes the
+source, not a user identity or an authorization decision.
+
+The source port accepts cancellation and an observation-time window. The initial
+demo adapter accepts a configured finite scenario and injected clock. It emits
+only scenario events that have occurred within the requested window. Scenario
+events have stable identifiers across repeated reads. It never opens a network
+connection. The backend will compose exactly one source through dependency
+injection. This SDK does not expose HTTP or bypass the pending access policy.
+
+These are internal adapter contract details, not a settled public HTTP schema.
+The public REST contract remains Huma-generated. HTTP authorization, geographic
+query rules, pagination, polling/replay, and client error behavior remain open.
+
+## Client lightning calculations
+
+Shared client calculations must accept the vehicle position and an injected clock.
+They must return structured distance and age values for the localization layer.
+Geographic distance uses a spherical great-circle approximation in meters, with
+longitude differences normalized by trigonometric calculation across the dateline.
+Eligibility is an injected policy until exact cutoff, clock-skew, and tie behavior
+are approved. The calculation must not read a map viewport or system clock.
+
+## Demo runtime composition
+
+The standard server selects `disabled` or `demo` through bootstrap configuration.
+Unknown source names must fail configuration validation. The demo Compose overlay
+selects `demo`. A rolling demo scenario repeats configured positions at a fixed
+interval and uses epoch-based sequence IDs; repeated reads of the same event must
+preserve its ID and timestamp. The source must remain labeled simulated. This
+rolling source is separate from the finite scenario adapter used in tests.
+
+The schema bootstrap may explicitly grant authenticated feed access through a
+`lightning_feed` viewer wildcard. The API still authenticates sessions and checks
+active users before checking feed permission. The schema credential owns this
+bootstrap change; the API must not acquire schema-write permission.
+
+## Client feed adapter
+
+The shared API adapter must read the lightning endpoint through generated
+`openapi-fetch` types and the existing application-session token provider. It must
+preserve request cancellation and HTTP failure status. It must reject malformed
+source mode, coordinates, timestamps, and observation identifiers before returning
+normalized client observations. It must not issue requests to provider endpoints
+or alter stored credentials. The presentation layer owns retry and offline policy.
+
+## Native map adapter
+
+The mobile client includes a local Expo module for the iOS MapKit surface.
+The module must render map state supplied by the client and report user map
+interaction back to the client. It must not fetch lightning data, own provider
+credentials, or decide authentication. Native markers and rings are presentation
+adapters for normalized observations. Native compilation and simulator verification
+are required; JavaScript export does not prove this module works on iOS.
+
+The native location adapter must report coordinates and permission state to the
+client. It must stop location updates when its view is detached or tracking is
+disabled. Lightning API requests must not include vehicle coordinates. Permission
+purpose text must come from the shared locale catalog. Location-denied presentation
+and background navigation policy remain open product decisions.
+
+Native module TypeScript wrappers must remain inside the client transport checks.
+The checks must allow the Expo native bridge and imports from the local module
+directory, but must reject direct network calls in those wrappers.
+
+## MapKit route calculation adapter
+
+The iOS native module must expose driving-route calculation using MapKit. It must
+return a normalized route with geometry, distance, expected travel time, and maneuver
+instructions. The adapter must reject invalid coordinates and propagate a route
+service failure. Route calculation alone is not turn-by-turn guidance: progress,
+missed turns, rerouting, speech, and CarPlay maneuver presentation remain required.
+
+## External source executable
+
+The public bootstrap package must expose a source-factory entrypoint so a private
+Go module can build its own server executable without importing internal packages.
+`external` selects that injected factory. The standard binary must fail startup
+when `external` is selected without a factory. Selecting `demo` must not execute
+an external factory. All source variants must use the same session, authorization,
+audit, and HTTP composition. A private entrypoint owns its provider configuration.

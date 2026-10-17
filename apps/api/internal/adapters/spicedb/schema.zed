@@ -5,3 +5,8 @@ definition resource {
   permission update = owner
   permission delete = owner
 }
+
+definition lightning_feed {
+  relation viewer: user | user:*
+  permission view = viewer
+}

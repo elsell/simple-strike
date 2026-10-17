@@ -25,5 +25,13 @@
   "examples.create": "Create example",
   "examples.created": "Example created.",
   "examples.count_one": "{{count}} example",
-  "examples.count_other": "{{count}} examples"
+  "examples.count_other": "{{count}} examples",
+  "map.demo": "Simulated lightning",
+  "map.live": "Live lightning",
+  "map.following": "Following vehicle",
+  "map.exploring": "Exploring map",
+  "map.zoomIn": "Zoom in",
+  "map.zoomOut": "Zoom out",
+  "map.recenter": "Recenter",
+  "map.locationPermission": "Use your location to center the map and provide route guidance."
 }

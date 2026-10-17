@@ -18,6 +18,7 @@ generate:
 	pnpm --dir packages/api-client generate
 
 check:
+	bash scripts/verify-lightning-extension.sh
 	./scripts/plan-release_test.sh
 	./scripts/test-start-postgres-for-acceptance.sh
 	./scripts/test-install-docker-buildx.sh

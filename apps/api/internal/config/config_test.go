@@ -35,6 +35,7 @@ func TestSecureConfigurationRejectsPlaintextBoundaries(t *testing.T) {
 		name   string
 		change func(*Config)
 	}{
+		{"unknown lightning source", func(c *Config) { c.LightningSource = "unknown" }},
 		{"database TLS disabled", func(c *Config) { c.DatabaseDSN = "postgres://db.example/app?sslmode=disable" }},
 		{"OIDC plaintext", func(c *Config) { c.OIDCIssuer = "http://id.example/dex" }},
 		{"docs client missing audience", func(c *Config) { c.OIDCAudiences = []string{"web", "mobile"} }},

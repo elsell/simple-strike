@@ -94,8 +94,8 @@ type OpenTelemetry struct {
 }
 
 func NewOpenTelemetry(ctx context.Context, endpoint, serviceName string, insecure bool) (*OpenTelemetry, error) {
-	traceOptions := []otlptracehttp.Option{otlptracehttp.WithEndpointURL(endpoint)}
-	metricOptions := []otlpmetrichttp.Option{otlpmetrichttp.WithEndpointURL(endpoint)}
+	traceOptions := []otlptracehttp.Option{otlptracehttp.WithEndpointURL(strings.TrimRight(endpoint, "/") + "/v1/traces")}
+	metricOptions := []otlpmetrichttp.Option{otlpmetrichttp.WithEndpointURL(strings.TrimRight(endpoint, "/") + "/v1/metrics")}
 	if insecure {
 		traceOptions = append(traceOptions, otlptracehttp.WithInsecure())
 		metricOptions = append(metricOptions, otlpmetrichttp.WithInsecure())

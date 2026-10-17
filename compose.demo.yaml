@@ -1,0 +1,14 @@
+# Local demo identity overlay. This does not configure a public deployment.
+services:
+  dex:
+    volumes:
+      - ./deploy/dex/demo.yaml:/etc/dex/config.yaml:ro
+  spicedb-schema:
+    environment:
+      SIMPLE_STRIKE_FEED_ACCESS: authenticated
+  api:
+    environment:
+      SIMPLE_STRIKE_LIGHTNING_SOURCE: demo
+      SIMPLE_STRIKE_ACCOUNT_PROVISIONING_MODE: open
+      SIMPLE_STRIKE_INVITATION_ADMIN_IDENTITIES: ""
+      SIMPLE_STRIKE_ACCOUNT_SELF_DEACTIVATION_ENABLED: "false"
