@@ -297,15 +297,25 @@ The JavaScript security gate must use fixed releases for the advisories found in
 the inherited lockfile. Required minimums are shell-quote 1.11.0, fast-uri 3.1.8,
 brace-expansion 5.0.12, js-yaml 3.15.2 or 4.3.2 within its existing major version,
 nanoid 3.3.18, browserslist 4.28.7, xmldom 0.8.15 or 0.9.12 within its existing
-minor series, image-size 2.0.3, devalue 5.9.3, node-forge 1.4.1, braces 3.0.4,
+minor series, image-size 2.0.3, devalue 5.9.3,
 source-map-js 1.2.2, compression 1.8.2, Joi 17.13.8, PostCSS 8.5.23,
-SvelteKit 2.70.2, decode-uri-component 0.4.3, baseline-browser-mapping 2.11.0,
-moment 2.31.0, and sprintf-js 1.1.4. Preserve the legacy callable brace-expansion
+SvelteKit 2.70.2, decode-uri-component 0.5.0, baseline-browser-mapping 2.11.0,
+and moment 2.31.0. Preserve the legacy callable brace-expansion
 adapter and verify both legacy and modern consumers. These changes require a
 clean package audit, the age gate, workspace tests and builds, native compatibility
 validation, and native compilation before merge.
 
-The registry does not yet publish the advertised fixed versions for node-forge,
-braces, decode-uri-component, or sprintf-js. Their findings remain unresolved.
+The upstream advisories list no patched release for
+[node-forge](https://github.com/advisories/GHSA-86w9-cpqp-85rv),
+[braces](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), or
+[sprintf-js](https://github.com/advisories/GHSA-hp3w-g68c-fv3c), as checked on
+2026-10-17. Their findings remain unresolved.
 Do not invent package versions or suppress the audit. Resolve them with a verified
 upstream release or a separately reviewed backport before the merge gate passes.
+
+The decode-uri-component 0.5.0 security release is available. Its reviewed patch
+must change only module packaging so existing CommonJS query-string consumers
+receive the callable decoder. The upstream decoding algorithm must remain intact.
+Verify valid Unicode and malformed percent-encoded input through the installed
+query-string consumer, with a bounded subprocess timeout. Verify CommonJS and
+ES module access to the decoder.
