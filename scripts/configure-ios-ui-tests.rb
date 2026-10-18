@@ -14,6 +14,7 @@ reference = project.main_group.new_file(File.join(root, 'scripts/ios-ui-tests/Co
 target.source_build_phase.add_file_reference(reference)
 target.build_configurations.each do |configuration|
   configuration.build_settings.merge!({
+    'PRODUCT_NAME' => name,
     'PRODUCT_BUNDLE_IDENTIFIER' => 'com.elsell.simplestrike.acceptance',
     'GENERATE_INFOPLIST_FILE' => 'YES',
     'SWIFT_VERSION' => '5.0',

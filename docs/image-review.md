@@ -14,6 +14,14 @@ The vendor SBOM includes the updated certificate bundle. See the
 [testing specification](../specs/platform/testing.spec.md#api-runtime-certificate-refresh).
 Final application-image scans and acceptance still apply.
 
+The final Linux amd64 API image built from source
+`22ff9051444a955c4affdf0e7b73e20e28614648` was scanned with Grype 0.111.1 on
+October 18. Image manifest digest
+`sha256:472ce573706ebc6955a5c68fe7e18584878485fe80f5bf4d094168dfd9e73bce`
+reported zero matches and zero ignored matches. The scanner database reports a
+build time of `2026-10-18T06:27:17Z`. This is local candidate-image evidence,
+not registry publication or deployment evidence. The web image gate remains open.
+
 ## Web runtime investigation
 
 The currently pinned Node runtime is
