@@ -1,6 +1,7 @@
 import { getLocales } from 'expo-localization';
 import { useEffect, useState } from 'react';
-import { Button, Modal, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Button, Modal, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { createSessionApiClient, sessionExpiryAdvanced, sessionRefreshDelay, sessionRefreshLeadMs } from '@simple-strike/api-client';
 import { classifySessionFailure, isSessionFailure, refreshSessionCredential, sessionCredentialFromResponse, sessionRetryDelay, validateSessionCredential, type SessionAccessState, type SessionFailure, type ClientRuntimeConfig, type SessionScope } from '@simple-strike/client-core';
 import { type MessageKey } from '@simple-strike/i18n';

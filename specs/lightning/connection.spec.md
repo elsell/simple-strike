@@ -14,6 +14,8 @@ identifier. This configuration contains no provider subscription credentials.
 
 - The app must let the driver enter a backend base URL before signing in.
 - The address field must retain a visible localized label when it contains a value.
+- Setup, sign-in, and account controls must retain their content padding in
+  addition to device safe-area insets. Text and fields must not touch screen edges.
 - The backend must expose a public, versioned client-configuration endpoint at
   `GET /v1/client-configuration`. Its Huma contract must return the configured
   OIDC issuer and mobile public client identifier in a `data` envelope.
