@@ -5,10 +5,8 @@ import os
 from pathlib import Path
 import plistlib
 import re
-import signal
 import subprocess
 import time
-import urllib.request
 import uuid
 
 
@@ -47,16 +45,17 @@ def main():
     root = Path(__file__).resolve().parent.parent
     output = root / '.bin/ios-launch-smoke'
     output.mkdir(parents=True, exist_ok=True)
-    applications = list((root / '.bin/ios-simulator/Build/Products/Debug-iphonesimulator').glob('*.app'))
+    applications = list((root / '.bin/ios-simulator/Build/Products/Release-iphonesimulator').glob('*.app'))
     if len(applications) != 1:
         raise ValueError('Expected exactly one built iOS application')
     app = applications[0]
+    if not (app / 'main.jsbundle').is_file():
+        raise ValueError('Simulator app is missing its embedded JavaScript bundle')
     with (app / 'Info.plist').open('rb') as source:
         info = plistlib.load(source)
     bundle = info['CFBundleIdentifier']
     device_type, runtime = simulator_type(json.loads(command('xcrun', 'simctl', 'list', 'devices', 'available', '--json')))
     device = command('xcrun', 'simctl', 'create', f'SimpleStrike-smoke-{uuid.uuid4()}', device_type, runtime)
-    metro = None
     try:
         command('swiftc', str(root / 'scripts/recognize-ios-screenshot.swift'), '-o', str(output / 'recognize'), timeout=120)
         command('xcrun', 'simctl', 'boot', device)
@@ -64,43 +63,21 @@ def main():
         # Fresh hosted simulators can still be provisioning system services after
         # bootstatus finishes. Allow installation time without relaxing UI checks.
         command('xcrun', 'simctl', 'install', device, str(app), timeout=180)
-        env = {**os.environ, 'CI': '1', 'EXPO_NO_TELEMETRY': '1', 'SIMPLE_STRIKE_APP_ENV': 'development',
-               'SIMPLE_STRIKE_API_URL': 'http://localhost:8080', 'SIMPLE_STRIKE_OIDC_ISSUER': 'http://localhost:5556/dex',
-               'SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID': 'simple-strike-mobile'}
-        with (output / 'metro.log').open('w') as log:
-            # Expo's localhost binding can select IPv6 only. The native bundle
-            # loader requests IPv4, so use the isolated runner's dual-stack bind.
-            metro = subprocess.Popen(['node', 'node_modules/expo/bin/cli', 'start', '--dev-client', '--lan', '--port', '8081'],
-                                     cwd=root / 'apps/mobile', env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
-            deadline = time.monotonic() + 90
-            while True:
-                if metro.poll() is not None:
-                    raise RuntimeError('Metro exited before readiness')
-                try:
-                    with urllib.request.urlopen('http://127.0.0.1:8081/status', timeout=2) as response:
-                        if response.read().decode().strip() == 'packager-status:running':
-                            break
-                except (OSError, ValueError):
-                    pass
-                if time.monotonic() >= deadline:
-                    raise TimeoutError('Metro readiness timeout')
-                time.sleep(1)
-            # Expo's simulator launcher accepts a project URL without a system open-URL dialog.
-            pid = launch_pid(command('xcrun', 'simctl', 'launch', device, bundle,
-                '-AppleLanguages', '(en)', '-AppleLocale', 'en_US',
-                '--initialUrl', 'http://127.0.0.1:8081/?disableOnboarding=1'), bundle)
-            deadline = time.monotonic() + 180
-            while time.monotonic() < deadline:
-                os.kill(pid, 0)
-                command('xcrun', 'simctl', 'io', device, 'screenshot', str(output / 'launch.png'))
-                lines = json.loads(command(str(output / 'recognize'), str(output / 'launch.png')))
-                (output / 'recognized-text.json').write_text(json.dumps(lines, indent=2) + '\n')
-                if setup_visible(lines):
-                    (output / 'result.json').write_text(json.dumps({'revision': command('git', '-C', str(root), 'rev-parse', 'HEAD'),
-                        'bundleIdentifier': bundle, 'runtime': runtime, 'setupScreenVisible': True, 'carPlayVerified': False}, indent=2) + '\n')
-                    return
-                time.sleep(3)
-            raise TimeoutError('The backend setup screen did not appear; inspect launch.png and metro.log')
+        pid = launch_pid(command('xcrun', 'simctl', 'launch', device, bundle,
+            '-AppleLanguages', '(en)', '-AppleLocale', 'en_US'), bundle)
+        deadline = time.monotonic() + 180
+        while time.monotonic() < deadline:
+            os.kill(pid, 0)
+            command('xcrun', 'simctl', 'io', device, 'screenshot', str(output / 'launch.png'), timeout=90)
+            lines = json.loads(command(str(output / 'recognize'), str(output / 'launch.png')))
+            (output / 'recognized-text.json').write_text(json.dumps(lines, indent=2) + '\n')
+            if setup_visible(lines):
+                (output / 'result.json').write_text(json.dumps({'revision': command('git', '-C', str(root), 'rev-parse', 'HEAD'),
+                    'bundleIdentifier': bundle, 'runtime': runtime, 'setupScreenVisible': True,
+                    'embeddedBundle': True, 'carPlayVerified': False}, indent=2) + '\n')
+                return
+            time.sleep(3)
+        raise TimeoutError('The backend setup screen did not become ready; inspect launch.png')
     except Exception as failure:
         (output / 'failure.log').write_text(str(failure) + '\n')
         diagnostics = {
@@ -116,13 +93,6 @@ def main():
                 (output / f'{name}.log').write_text(str(diagnostic_failure))
         raise
     finally:
-        if metro and metro.poll() is None:
-            os.killpg(metro.pid, signal.SIGTERM)
-            try:
-                metro.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                os.killpg(metro.pid, signal.SIGKILL)
-                metro.wait(timeout=10)
         for operation in ('shutdown', 'delete'):
             subprocess.run(['xcrun', 'simctl', operation, device], capture_output=True, timeout=60, check=False)
 

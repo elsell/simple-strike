@@ -8,4 +8,4 @@ scheme="$(printf '%s' "$schemes_json" | python3 -c 'import json,sys; target=sys.
 test -n "$scheme" || { echo "iOS application scheme \"$application_scheme\" missing" >&2; exit 1; }
 # Keep simulator signing enabled so Xcode embeds the identity used by Keychain.
 # Ad hoc signing uses no developer certificate or device provisioning profile.
-xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Debug -sdk iphonesimulator -derivedDataPath .bin/ios-simulator CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES build
+xcodebuild -workspace "$workspace" -scheme "$scheme" -configuration Release -sdk iphonesimulator -derivedDataPath .bin/ios-simulator CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES build

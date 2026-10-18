@@ -408,13 +408,16 @@ not waive native acceptance, image review, or any other merge requirement.
 An affected successful hosted iOS build must publish its ad hoc signed simulator app
 and mechanically derived Git revision as a short-lived CI artifact. The archive
 must preserve the application bundle structure. It must not include signing
-material, build caches, or backend credentials. This development build requires
-Metro and the demo backend. Artifact availability does not prove launch, map
+material, build caches, or backend credentials. This simulator build must embed
+its JavaScript bundle and use the explicit
+development demo configuration. It must not require Metro or the development
+launcher. It still requires a reachable demo backend for sign-in and map data.
+Artifact availability does not prove launch, map
 interaction, device signing, or CarPlay acceptance.
 
 An affected iOS build must also install and launch its exact simulator app in a
-fresh, task-owned simulator. The check must load the development bundle from a
-local Metro process, capture a screenshot, and verify the signed-out backend
+fresh, task-owned simulator. The check must load the embedded bundle, capture a
+screenshot, and verify the signed-out backend
 setup screen by recognized text. A living process or a splash screen alone must
 not pass. The screenshot and recognized text must be retained for inspection.
 The simulator build must retain Xcode's application identity for Keychain access.
@@ -422,14 +425,10 @@ It must not require a developer certificate or provisioning profile. A fresh
 installation showing a connection-storage error must fail the startup check.
 The setup screen must finish storage initialization before the check passes;
 visible loading text is not readiness.
-The Metro readiness probe must use the IPv4 loopback address requested by the
-native development bundle loader. A successful IPv6 localhost probe alone must
-not establish readiness. The hosted test may bind Metro to all interfaces on
-its isolated CI runner to support both loopback address families.
 Installation into a fresh hosted simulator may take up to three minutes. An
 installation timeout must fail the check, retain diagnostics, and must not count
 as successful application launch.
-The check must clean up only its own simulator and Metro process. This smoke
+The check must clean up only its own simulator. This smoke
 check does not establish CarPlay, authenticated map behavior, or route guidance.
 
 The temporary production-dependency deployment used by the audit gate must run

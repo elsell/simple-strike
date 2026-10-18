@@ -147,15 +147,13 @@ describe the current adapter as a finished CarPlay app.
 
 Affected successful iOS CI jobs publish an `ios-simulator-<revision>` artifact for
 seven days. Download and extract it from the workflow run on a Mac with Xcode 26.
-The inner zip preserves the app bundle. Read `revision.txt` and check out that
-revision before starting Metro. A pull request artifact may identify its tested
-merge commit. Install dependencies from the frozen lockfile in that checkout.
+The inner zip preserves the app bundle. Read `revision.txt` to identify the tested
+revision. A pull request artifact may identify its tested merge commit. The app
+contains its JavaScript bundle and does not need Metro or the development launcher.
 
-Start the local demo stack described below, then start Metro with
-`pnpm --dir apps/mobile start`. Boot an iOS simulator in Xcode. Install the
+Start the local demo stack described below. Boot an iOS simulator in Xcode. Install the
 extracted `.app` bundle with `xcrun simctl install booted /path/to/SimpleStrike.app`
-(use its actual filename), then open Simple Strike in the simulator. Connect the
-development client to the local Metro server if prompted. This artifact does not
+(use its actual filename), then open Simple Strike in the simulator. This artifact does not
 run on a physical iPhone and does not require an Apple signing identity.
 
 The downloaded build uses development endpoints. Do not publish it as a signed
@@ -166,8 +164,8 @@ CI retains the ad hoc signed simulator build before the launch check. A download
 artifact therefore does not imply that startup or interaction checks passed.
 
 The iOS job also runs `python3 scripts/ios-launch-smoke.py` after building. It
-creates a fresh simulator, runs local Metro, and checks the visible backend setup
-screen. The `ios-launch-<revision>` artifact contains its screenshot, recognized
+creates a fresh simulator, loads the embedded bundle, and checks the ready backend
+setup screen without a storage error. The `ios-launch-<revision>` artifact contains its screenshot, recognized
 text, and result. Inspect the screenshot as well as the result. This check covers
 signed-out phone startup only. It does not verify sign-in, maps, or CarPlay.
 

@@ -265,13 +265,18 @@ jobs:
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Build iOS simulator application
         run: make mobile-build-ios
+        env:
+          SIMPLE_STRIKE_APP_ENV: development
+          SIMPLE_STRIKE_API_URL: http://localhost:8080
+          SIMPLE_STRIKE_OIDC_ISSUER: http://localhost:5556/dex
+          SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID: simple-strike-mobile
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Verify locked CocoaPods
         run: cd apps/mobile && test "$(bundle exec pod --version)" = "1.16.2"
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Package iOS simulator application
         run: |
-          application="$(find .bin/ios-simulator/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' -type d -print -quit)"
+          application="$(find .bin/ios-simulator/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' -type d -print -quit)"
           test -n "$application"
           mkdir -p .bin/ios-simulator-artifact
           ditto "$application" ".bin/ios-simulator-artifact/$(basename "$application")"
