@@ -6,7 +6,7 @@ still pending. This guide does not claim an operational demo service.
 
 ## One source per backend
 
-Each backend will receive one `ports.Source` at bootstrap. A source normalizes
+Each backend receives one `ports.Source` at bootstrap. A source normalizes
 observations from the operator's configured provider. Clients receive the standard
 backend API and do not select providers or receive provider credentials.
 
@@ -33,8 +33,9 @@ Implement `Read(context.Context, ports.Window) (domain.Batch, error)`.
 - Return errors through the port. Do not translate errors into HTTP responses.
 - Never return subscription credentials in observations or error descriptions.
 
-HTTP access policy and source health metadata remain open decisions. Implementing
-this port does not expose a public route or authorize access to a source.
+The standard server enforces session and feed-view permissions as described below.
+Implementing this port does not authorize access to an upstream source. Provider
+health metadata beyond request failure remains an open decision.
 
 ## Demo scenario
 
@@ -43,9 +44,9 @@ events. Each event has an ID, time offset, and position. Reads return events tha
 have occurred according to the injected clock and fall inside the requested window.
 Repeated reads preserve IDs and occurrence times. The adapter does not use a network.
 
-The scenario is finite. It does not loop, relocate strikes to a user's position,
-or silently reset the clock. A future demo-server bootstrap will configure its
-scenario explicitly and identify all results as simulated.
+This finite scenario is useful for controlled tests. It does not loop, relocate
+strikes to a user's position, or silently reset the clock. The runnable demo server
+uses the separate rolling scenario described below. Both label results as simulated.
 
 ## Verify the extension boundary
 

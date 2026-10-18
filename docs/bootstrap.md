@@ -9,7 +9,9 @@ make-app new "Simple Strike" --module github.com/elsell/simple-strike \
 ```
 
 The foundation includes API, web, mobile, identity, authorization, audit,
-localization, and tests. Lightning maps and car interfaces are not implemented.
+localization, and tests. The initial bootstrap did not implement lightning maps
+or car interfaces. Current implementation status is in [mobile](mobile.md) and
+[provider adapters](lightning-adapters.md).
 
 Generic engineering guidance was rewritten without private host notes. Reviewed
 delivery checks were adapted for this repository. No private application code,
