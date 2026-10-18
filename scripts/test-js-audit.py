@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from datetime import date
 import tempfile
 import shutil
 
@@ -43,6 +44,14 @@ class AuditTest(unittest.TestCase):
 
     def test_clean_report(self):
         self.assertEqual(gate.classify({'advisories': {}, 'metadata': {'vulnerabilities': {'info': 0, 'low': 0, 'moderate': 0, 'high': 0, 'critical': 0}}}, False), ([], []))
+
+    def test_braces_exception_requires_fresh_artifacts_and_unexpired_date(self):
+        data = report('GHSA-vfj7-8cjw-p6xm', 'braces', '3.0.3')
+        self.assertFalse(gate.classify(data, True, True, date(2026, 11, 16))[0])
+        for evidence, day in [(False, date(2026, 10, 18)), (True, date(2026, 11, 17)), (True, None)]:
+            self.assertTrue(gate.classify(data, True, evidence, day)[0])
+        for package, version in [('other', '3.0.3'), ('braces', '3.0.2')]:
+            self.assertTrue(gate.classify(report(gate.BRACES, package, version), True, True, date(2026, 10, 18))[0])
 
     def test_patch_integrity_and_each_consumer_are_required(self):
         gate.verify_patch_files(gate.ROOT)

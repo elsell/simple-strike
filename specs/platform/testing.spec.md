@@ -308,7 +308,8 @@ validation, and native compilation before merge.
 The upstream advisories list no patched release for
 [node-forge](https://github.com/advisories/GHSA-86w9-cpqp-85rv) or
 [braces](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), as checked on
-2026-10-18. Their findings remain unresolved pending verified remediation.
+2026-10-18. Their upstream advisory records remain active. Local treatment is
+defined below.
 Do not invent package versions or silently suppress the audit. Resolve active
 findings with a verified upstream release or a separately reviewed backport before
 the merge gate passes.
@@ -319,8 +320,8 @@ records state `REJECTED` and the authority's rejection reason. On 2026-10-18,
 GitHub still reported `GHSA-hp3w-g68c-fv3c` with a null `withdrawn_at`, so the
 raw package audit still fails on it. Treat this as a feed discrepancy, not an
 unresolved vulnerability or a reason to change numeric formatting semantics.
-No audit exclusion is currently configured. Any future treatment must identify
-the exact advisory and preserve the raw scan result and rejection evidence.
+The reviewed classification below identifies the exact advisory and preserves
+the raw scan result and rejection evidence.
 
 The decode-uri-component 0.5.0 security release is available. Its reviewed patch
 must change only module packaging so existing CommonJS query-string consumers
@@ -341,9 +342,9 @@ The upstream RSA suite passed against the isolated candidate: 101 passing and
 four upstream pending cases, using Mocha 11.7.5. The dependency backport must
 contain only the upstream nested element-count validation. An installed-consumer
 regression check must reject the published malformed-signature vector, accept
-valid signatures, and reject altered messages. Final review remains required.
-The audit finding remains open until the backport is reviewed and its treatment
-in the security gate is explicitly documented. It must not be silently excluded.
+valid signatures, and reject altered messages. The completed review and exact
+security-gate treatment are recorded below. The raw audit finding remains visible;
+it must not be silently excluded.
 
 ### Reviewed JavaScript audit findings
 
@@ -366,10 +367,11 @@ resolution; frozen installs and the actual consumer resolver remain authoritativ
 
 The gate must reject malformed audit output, audit execution failures, altered or
 missing backport evidence, mismatched versions or package names, and all other
-advisories. In particular, the active `braces` finding must continue to fail the
-gate. This is not a general advisory allowlist or an exception for unpatched risk.
+advisories. The active `braces` finding must fail unless every condition of the narrowly
+approved temporary exception below is satisfied. This is not a general advisory
+allowlist.
 
-### Remaining braces finding: reachability evidence and pending decision
+### Approved temporary braces build-tool exception
 
 On 2026-10-18, the iOS export at the source state of `858f87f` produced a Hermes
 source map with 1,071 mapped sources. Neither `braces` nor `micromatch` appeared.
@@ -384,10 +386,19 @@ Jest, and file-globbing build tools. The raw audit still reports
 The maintainer disputes the issue, but that does not withdraw the advisory.
 No upstream fixed release has been verified.
 
-A possible policy exception is limited to this exact advisory and package version
-in development/build tooling, expires on 2026-11-17, preserves its raw finding,
-and requires automated checks that the shipped iOS and web artifacts exclude both
-packages. It would not accept new advisories, runtime inclusion, or arbitrary
-untrusted glob patterns. This changes the current active-advisory policy and is
-pending explicit user approval. The gate must continue to fail until that decision
-and its required artifact checks are implemented and reviewed.
+The user approved this exception on 2026-10-18. It covers only
+`GHSA-vfj7-8cjw-p6xm` in `braces@3.0.3`, in development/build tooling. It expires
+at 00:00 UTC on 2026-11-17. The raw finding must remain visible. New advisories,
+other versions, runtime inclusion, and arbitrary untrusted glob patterns are not
+approved. Build and development services must use trusted repository inputs.
+
+Each security-gate run that applies the exception must create a fresh iOS export
+with source maps and a fresh production web build and dependency deployment. It
+must inspect the iOS mapped sources, web bundle mapped sources, and deployed
+package manifests. Empty web source maps may cover only empty chunks or static
+import/re-export shims; executable code requires mapped sources or an exact
+reviewed generated-helper fingerprint. Neither `braces` nor `micromatch` may appear. Missing, malformed,
+or unsupported evidence must fail closed. A previous scan or a manually supplied
+success marker must not enable the exception. Expiry must use the current UTC date.
+The check must still fail on any other unresolved finding. This exception does
+not waive native acceptance, image review, or any other merge requirement.

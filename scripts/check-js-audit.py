@@ -1,5 +1,9 @@
 """Keep the raw audit and distinguish exact, reviewed remediation evidence."""
 import hashlib
+import importlib.util
+from datetime import date, datetime, timezone
+import shutil
+import tempfile
 import json
 from pathlib import Path
 import re
@@ -9,10 +13,12 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 FORGE = 'GHSA-86w9-cpqp-85rv'
 REJECTED = 'GHSA-hp3w-g68c-fv3c'
+BRACES = 'GHSA-vfj7-8cjw-p6xm'
+BRACES_EXPIRY = date(2026, 11, 17)
 PATCH_HASH = '2798686e4488058ad81c3b8e32eb763c0feff21f4c717ce4d13b6ef2432cd5b8'
 
 
-def classify(data, backport_verified):
+def classify(data, backport_verified, artifacts_verified=False, today=None):
     if (not isinstance(data, dict) or 'error' in data or
             not isinstance(data.get('advisories'), dict) or
             not isinstance(data.get('metadata'), dict)):
@@ -43,6 +49,9 @@ def classify(data, backport_verified):
             reviewed.append(description + ' | CVE authority rejected CVE-2026-97058; see testing spec')
         elif identifier == FORGE and package == 'node-forge' and versions == {'1.4.0'} and backport_verified:
             reviewed.append(description + ' | exact reviewed upstream backport and installed regression verified')
+        elif (identifier == BRACES and package == 'braces' and versions == {'3.0.3'}
+              and artifacts_verified and today is not None and today < BRACES_EXPIRY):
+            reviewed.append(description + ' | user-approved build-tool exception; runtime artifacts checked; expires 2026-11-17 UTC')
         else:
             blocked.append(description)
     return blocked, reviewed
@@ -59,6 +68,29 @@ def verify_patch_files(root):
     expected = f'1.4.0(patch_hash={PATCH_HASH})'
     if not references or any(reference != expected for reference in references):
         raise ValueError('Unreviewed RSA consumer resolution')
+
+
+def verify_runtime_artifacts():
+    spec = importlib.util.spec_from_file_location('runtime_artifacts', ROOT / 'scripts/check-runtime-artifacts.py')
+    artifacts = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(artifacts)
+    with tempfile.TemporaryDirectory(prefix='runtime-audit-', dir=ROOT / '.bin') as directory:
+        staging = Path(directory)
+        ios, web = staging / 'ios', staging / 'web'
+        # Rebuild the outputs whose evidence will enable this exception. Never
+        # accept an old export or a caller-supplied success flag in the CLI.
+        shutil.rmtree(ROOT / 'apps/web/build', ignore_errors=True)
+        shutil.rmtree(ROOT / 'apps/web/.svelte-kit/output', ignore_errors=True)
+        commands = [
+            ([str(ROOT / 'apps/mobile/node_modules/.bin/expo'), 'export', '--platform', 'ios', '--source-maps', '--output-dir', str(ios)], ROOT / 'apps/mobile'),
+            ([str(ROOT / 'apps/web/node_modules/.bin/vite'), 'build', '--sourcemap'], ROOT / 'apps/web'),
+            (['pnpm', '--filter', '@simple-strike/web', 'deploy', '--legacy', '--prod', str(web)], ROOT),
+        ]
+        with (ROOT / '.bin/runtime-artifact-build.log').open('w') as log:
+            for command, directory in commands:
+                subprocess.run(command, cwd=directory, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=300)
+        sources, web_sources, packages = artifacts.inspect(ios, web)
+        print(f'Fresh runtime evidence: {sources} iOS mapped sources, {web_sources} web mapped sources, {packages} web manifests')
 
 
 def main():
@@ -80,7 +112,12 @@ def main():
         subprocess.run(['node', 'scripts/check-rsa-verification.mjs'], cwd=ROOT,
                        check=True, timeout=60)
         backport_verified = True
-    blocked, reviewed = classify(data, backport_verified)
+    artifacts_verified = False
+    if (any(finding['github_advisory_id'] == BRACES for finding in data['advisories'].values())
+            and datetime.now(timezone.utc).date() < BRACES_EXPIRY):
+        verify_runtime_artifacts()
+        artifacts_verified = True
+    blocked, reviewed = classify(data, backport_verified, artifacts_verified, datetime.now(timezone.utc).date())
     print(f'Unmodified package audit retained at {output.relative_to(ROOT)}')
     for finding in reviewed:
         print('REVIEWED:', finding)
