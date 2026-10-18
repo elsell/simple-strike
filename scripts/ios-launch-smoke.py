@@ -35,7 +35,10 @@ def simulator_type(inventory):
 
 
 def command(*args, timeout=60):
-    return subprocess.run(args, check=True, capture_output=True, text=True, timeout=timeout).stdout.strip()
+    try:
+        return subprocess.run(args, check=True, capture_output=True, text=True, timeout=timeout).stdout.strip()
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as failure:
+        raise RuntimeError(f'{failure}\nstdout: {failure.stdout!r}\nstderr: {failure.stderr!r}') from failure
 
 
 def main():
@@ -92,6 +95,20 @@ def main():
                     return
                 time.sleep(3)
             raise TimeoutError('The backend setup screen did not appear; inspect launch.png and metro.log')
+    except Exception as failure:
+        (output / 'failure.log').write_text(str(failure) + '\n')
+        diagnostics = {
+            'screenshot': ['xcrun', 'simctl', 'io', device, 'screenshot', str(output / 'failure.png')],
+            'app-system': ['xcrun', 'simctl', 'spawn', device, 'log', 'show', '--last', '3m', '--style', 'compact',
+                '--predicate', 'process == "SimpleStrike" OR (process == "SpringBoard" AND eventMessage CONTAINS "simplestrike")'],
+        }
+        for name, args in diagnostics.items():
+            try:
+                result = subprocess.run(args, capture_output=True, text=True, timeout=30)
+                (output / f'{name}.log').write_text((result.stdout + '\n' + result.stderr)[-128_000:])
+            except Exception as diagnostic_failure:
+                (output / f'{name}.log').write_text(str(diagnostic_failure))
+        raise
     finally:
         if metro and metro.poll() is None:
             os.killpg(metro.pid, signal.SIGTERM)
