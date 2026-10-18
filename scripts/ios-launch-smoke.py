@@ -71,7 +71,7 @@ def main():
                 if metro.poll() is not None:
                     raise RuntimeError('Metro exited before readiness')
                 try:
-                    with urllib.request.urlopen('http://127.0.0.1:8081/status', timeout=2) as response:
+                    with urllib.request.urlopen('http://localhost:8081/status', timeout=2) as response:
                         if response.read().decode().strip() == 'packager-status:running':
                             break
                 except (OSError, ValueError):
@@ -80,7 +80,7 @@ def main():
                     raise TimeoutError('Metro readiness timeout')
                 time.sleep(1)
             pid = launch_pid(command('xcrun', 'simctl', 'launch', device, bundle, '-AppleLanguages', '(en)', '-AppleLocale', 'en_US'), bundle)
-            url = schemes[0] + '://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081&disableOnboarding=1&disableAutoLaunch=1'
+            url = schemes[0] + '://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081&disableOnboarding=1&disableAutoLaunch=1'
             command('xcrun', 'simctl', 'openurl', device, url)
             deadline = time.monotonic() + 180
             while time.monotonic() < deadline:
