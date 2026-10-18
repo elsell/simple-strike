@@ -27,3 +27,7 @@ or browser-PKCE acceptance. Product implementation is not yet complete.
 Local browser experiments are separate and are not native acceptance evidence.
 See [map](../lightning/map.spec.md), [data source](../lightning/data-source.spec.md),
 and [bootstrap notes](../../docs/bootstrap.md).
+
+The active slice also requires native simulator interaction evidence and final
+production-image verification. See [runtime image review](../../docs/image-review.md)
+for the current image findings and verified API base refresh.
