@@ -7,6 +7,7 @@ const fixture = readFileSync(`${__dirname}/fixtures/AppDelegate.swift`, 'utf8');
 test('scene conversion retains URL handlers and builds one shared root on demand', () => {
   const result = transformAppDelegate(fixture);
   assert.ok(!result.includes('factory.startReactNative('));
+  assert.ok(result.includes('internal import StrikeMap'));
   assert.equal((result.match(/rootViewFactory\.view\(/g) ?? []).length, 1);
   assert.ok(result.includes('if let root = sharedRoot { return root }'));
   assert.ok(result.includes('CarPlayBridge.shared.startRuntime'));

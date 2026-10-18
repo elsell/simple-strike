@@ -14,7 +14,7 @@ function transformAppDelegate(source) {
   if (source.includes(marker)) return source;
   let result = replaceOnce(source, startup, `    initialLaunchOptions = launchOptions
     CarPlayBridge.shared.startRuntime = { [weak self] in _ = self?.ensureRuntime() }`, 'startup');
-  result = replaceOnce(result, 'import ReactAppDependencyProvider', 'import ReactAppDependencyProvider\nimport StrikeMap', 'imports');
+  result = replaceOnce(result, 'import ReactAppDependencyProvider', 'import ReactAppDependencyProvider\ninternal import StrikeMap', 'imports');
   const runtime = readFileSync(`${__dirname}/shared-runtime.swift`, 'utf8');
   result = replaceOnce(result, '  var window: UIWindow?', `  var window: UIWindow?\n${marker}\n${runtime}`, 'application delegate');
   return `${result}\n${readFileSync(`${__dirname}/phone-scene.swift`, 'utf8')}`;
