@@ -19,7 +19,7 @@ export default function LightningScreen(props: LightningScreenProps) {
   const [phoneActive, setPhoneActive] = useState(AppState.currentState === 'active');
   const [carActive, setCarActive] = useState(false);
   const active = phoneActive || carActive;
-  const navigation = useDrivingNavigation(props.translator, active);
+  const navigation = useDrivingNavigation(props.translator, active && cache.snapshot().connection !== 'denied');
   const [now, setNow] = useState(clock.now());
   const [locationState, setLocationState] = useState('undetermined');
   const [vehicleAvailable, setVehicleAvailable] = useState(false);
@@ -73,7 +73,7 @@ export default function LightningScreen(props: LightningScreenProps) {
       failed(error) {
         const status = (error as { status?: number } | null)?.status;
         if (status === 401 || status === 403) {
-          denied = true; cache.deny();
+          denied = true; cache.deny(); navigation.deny(); map.endRoute();
           if (status === 401) current.current.onUnauthorized();
         } else { failures++; cache.disconnect(); }
         redraw(value => value + 1);
@@ -106,7 +106,7 @@ export default function LightningScreen(props: LightningScreenProps) {
   });
   const carCommands = useRef<(command: CarCommand) => void>(() => undefined);
   carCommands.current = command => {
-    if (snapshot.connection === 'denied' || !active) return;
+    if (cache.snapshot().connection === 'denied' || !active) return;
     switch (command.name) {
       case 'zoomIn': map.zoomIn(); break;
       case 'zoomOut': map.zoomOut(); break;

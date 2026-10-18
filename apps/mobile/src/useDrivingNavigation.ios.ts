@@ -36,10 +36,12 @@ export function useDrivingNavigation(translator: Translator, active: boolean) {
     return () => clearTimeout(timer);
   }, [active, guidance]);
   async function search(query: string, near: MapPosition) {
+    if (!enabled.current) return;
     const work = planner.search(query, near); setPreview(planner.snapshot());
     await work; if (mounted.current) setPreview(planner.snapshot());
   }
   async function select(place: Place) {
+    if (!enabled.current) return;
     const work = planner.select(place, usableNavigationFix(location.current, Date.now()) ? location.current : null); setPreview(planner.snapshot());
     await work; if (mounted.current) setPreview(planner.snapshot());
   }
@@ -51,6 +53,7 @@ export function useDrivingNavigation(translator: Translator, active: boolean) {
   }
   function unavailable() { location.current = null; guidance.pause(); setSession(guidance.snapshot()); }
   function start() {
+    if (!enabled.current) return false;
     if (!preview.route || !preview.destination || !location.current) { setStartFailed(true); return; }
     try {
       guidance.start(preview.route, preview.destination, location.current);
@@ -59,13 +62,14 @@ export function useDrivingNavigation(translator: Translator, active: boolean) {
     } catch { setStartFailed(true); return false; }
   }
   function end() { planner.cancel(); guidance.end(); setPreview(planner.snapshot()); setSession(guidance.snapshot()); setStartFailed(false); setOpen(false); }
+  function deny() { enabled.current = false; location.current = null; end(); }
   function close() {
     if (preview.phase === 'searching' || preview.phase === 'calculating') { planner.cancel(); setPreview(planner.snapshot()); }
     setOpen(false);
   }
-  return { preview, session, open, startFailed, search, select, receive, unavailable, start, end, close,
-    show: () => { setStartFailed(false); setOpen(true); },
-    retry: () => { guidance.retry(); setSession(guidance.snapshot()); },
+  return { preview, session, open, startFailed, search, select, receive, unavailable, start, end, deny, close,
+    show: () => { if (enabled.current) { setStartFailed(false); setOpen(true); } },
+    retry: () => { if (enabled.current) { guidance.retry(); setSession(guidance.snapshot()); } },
   };
 }
 export type DrivingNavigation = ReturnType<typeof useDrivingNavigation>;
