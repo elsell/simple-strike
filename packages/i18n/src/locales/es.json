@@ -46,5 +46,7 @@
   "map.secondsAgo_other": "Hace {{count}} segundos",
   "map.secondsAgo_one": "Hace {{count}} segundo",
   "map.minutesAgo_other": "Hace {{count}} minutos",
-  "map.minutesAgo_one": "Hace {{count}} minuto"
+  "map.minutesAgo_one": "Hace {{count}} minuto",
+  "auth.account": "Cuenta",
+  "common.close": "Cerrar"
 }

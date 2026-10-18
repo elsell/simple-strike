@@ -37,7 +37,6 @@ export default function DrivingMap(props: DrivingMapProps) {
       onExplore={event => props.onExplore(event.nativeEvent)}
     />
     <View style={styles.status} pointerEvents="none">
-      <Text style={styles.title}>{t.t('app.title')}</Text>
       <Text style={styles.text}>{t.t(props.feed.mode === null ? 'map.loadingFeed' : props.feed.mode === 'demo' ? 'map.demo' : 'map.live')}</Text>
       {props.feed.connection === 'disconnected' ? <Text style={styles.text}>{t.t('map.disconnected')}</Text> : null}
       {props.feed.connection === 'denied' ? <Text style={styles.text}>{t.t('map.accessDenied')}</Text> : null}
@@ -56,7 +55,6 @@ export default function DrivingMap(props: DrivingMapProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, minHeight: 320 },
   status: { position: 'absolute', top: 16, left: 16, borderRadius: 16, padding: 14, backgroundColor: '#20242aee' },
-  title: { color: '#ffffff', fontWeight: '700', fontSize: 20 },
   text: { color: '#e4e8ef', fontSize: 14, marginTop: 4 },
   controls: { position: 'absolute', right: 12, bottom: 28, borderRadius: 16, padding: 8, gap: 10, backgroundColor: '#20242aee' },
 });

@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { getLocales } from 'expo-localization';
 import { useEffect, useState } from 'react';
-import { Button, SafeAreaView, Text } from 'react-native';
+import { Button, Modal, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { createSessionApiClient, sessionExpiryAdvanced, sessionRefreshDelay, sessionRefreshLeadMs } from '@simple-strike/api-client';
 import { classifySessionFailure, isSessionFailure, refreshSessionCredential, sessionCredentialFromResponse, sessionRetryDelay, validateSessionCredential, type SessionAccessState, type SessionFailure } from '@simple-strike/client-core';
 import { type MessageKey } from '@simple-strike/i18n';
@@ -41,6 +41,7 @@ export default function Home() {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
   const providerSignIn = useProviderSignIn(issuer, clientId, 'simplestrike');
 
@@ -55,7 +56,7 @@ export default function Home() {
   }
   async function clearSession(message: MessageKey | null = null, state: SessionAccessState = 'authentication_required') {
     const token = session?.token;
-    await saveSession(null); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
+    await saveSession(null); setAccountOpen(false); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
     if (token) try { await createSessionApiClient(apiURL, () => token).revoke(); } catch { /* local disposal is authoritative */ }
   }
   async function handleSessionFailure(cause: unknown, current: Session) {
@@ -121,11 +122,37 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [session?.token, session?.expiresAt, sessionRenewable, accessState, retryAttempt]);
 
-  return <SafeAreaView style={{ flex: 1, padding: 16, gap: 12 }}>
-    <Text style={{ fontSize: 32 }}>{i18n.t('app.title')}</Text>
-    <Text>{!ready ? i18n.t('common.loading') : accessState === 'authenticated_offline' ? i18n.t('auth.offline') : profile ? i18n.t('auth.signedInAs', { name: profile.displayName || profile.email }) : i18n.t('auth.ready')}</Text>
+  if (session && ready) return <SafeAreaView style={styles.signedIn}>
+    <View style={styles.toolbar}>
+      <Text style={styles.title}>{i18n.t('app.title')}</Text>
+      <Button title={i18n.t('auth.account')} onPress={() => setAccountOpen(true)} />
+    </View>
+    {accessState === 'authenticated_offline' ? <Text style={styles.notice}>{i18n.t('auth.offline')}</Text> : null}
+    {errorKey ? <Text style={styles.notice} accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}
+    <LightningScreen key={apiURL} apiURL={apiURL} token={session.token} translator={i18n} onUnauthorized={() => void clearSession('errors.sessionExpired')} />
+    <Modal visible={accountOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setAccountOpen(false)}>
+      <SafeAreaView style={styles.account}>
+        <Text style={styles.accountTitle} accessibilityRole="header">{i18n.t('auth.account')}</Text>
+        {profile ? <Text>{i18n.t('auth.signedInAs', { name: profile.displayName || profile.email })}</Text> : null}
+        <Button title={i18n.t('auth.signOut')} onPress={() => { setAccountOpen(false); void clearSession(); }} />
+        <Button title={i18n.t('common.close')} onPress={() => setAccountOpen(false)} />
+      </SafeAreaView>
+    </Modal>
+  </SafeAreaView>;
+
+  return <SafeAreaView style={styles.account}>
+    <Text style={styles.accountTitle}>{i18n.t('app.title')}</Text>
+    <Text>{!ready ? i18n.t('common.loading') : i18n.t('auth.ready')}</Text>
     {errorKey ? <Text accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}
-    <Button title={i18n.t(session ? 'auth.signOut' : 'auth.signIn')} disabled={!ready || (!session && !providerSignIn.ready)} onPress={() => session ? void clearSession() : void providerSignIn.begin()} />
-    {session && ready ? <LightningScreen key={apiURL} apiURL={apiURL} token={session.token} translator={i18n} onUnauthorized={() => void clearSession('errors.sessionExpired')} /> : null}
+    <Button title={i18n.t('auth.signIn')} disabled={!ready || !providerSignIn.ready} onPress={() => void providerSignIn.begin()} />
   </SafeAreaView>;
 }
+
+const styles = StyleSheet.create({
+  signedIn: { flex: 1, backgroundColor: '#20242a' },
+  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 48 },
+  title: { color: '#ffffff', fontWeight: '700', fontSize: 20 },
+  notice: { color: '#ffffff', paddingHorizontal: 16, paddingBottom: 8 },
+  account: { flex: 1, padding: 24, gap: 20 },
+  accountTitle: { fontSize: 32, fontWeight: '600' },
+});

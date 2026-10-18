@@ -93,3 +93,8 @@ clears the cache immediately.
 
 After a pinch gesture, zoom buttons must scale the visible map radius. Recenter
 must preserve that radius instead of restoring the radius before the gesture.
+
+The signed-in phone screen should give the map the available screen area. Account
+identity and sign-out controls may use a dismissible account sheet. Opening or
+closing this sheet must not discard recent observations or reset the viewport.
+Session errors must remain visible without opening the account sheet.

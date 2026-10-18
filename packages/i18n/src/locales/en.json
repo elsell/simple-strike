@@ -46,5 +46,7 @@
   "map.secondsAgo_other": "{{count}} seconds ago",
   "map.secondsAgo_one": "{{count}} second ago",
   "map.minutesAgo_other": "{{count}} minutes ago",
-  "map.minutesAgo_one": "{{count}} minute ago"
+  "map.minutesAgo_one": "{{count}} minute ago",
+  "auth.account": "Account",
+  "common.close": "Close"
 }
