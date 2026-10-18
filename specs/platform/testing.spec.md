@@ -415,3 +415,18 @@ interaction, device signing, or CarPlay acceptance.
 The temporary production-dependency deployment used by the audit gate must run
 in an isolated workspace copy. It must not change the installed development
 dependency graph used by contract generation and subsequent checks.
+
+### API runtime certificate refresh
+
+The API runtime uses `hi/static:latest-1790234989` at multi-platform digest
+`sha256:08d039e8b4f70c0b22118acfff9ada93fc7f9d349e5c5ac991fbdf6b876eea91`.
+This September 24, 2026 build exceeds the fourteen-day observation period.
+It replaces the older image whose certificate package triggered CVE-2023-32803.
+The reviewed amd64 vendor SBOM contains
+`ca-certificates-bundle 2026.2.90_v9.0.317-1.hum1` and timezone data `2026c-2.hum1`.
+On October 18, Grype 0.111.1 found no vulnerabilities in direct scans of the
+amd64 and arm64 image manifests with its October 17 database. The index signature verified with Red Hat's
+`63405576` public key, using the vendor-documented verification command.
+The image retains the minimal static-runtime role. This base-image check does
+not establish a clean final application image or replace exact-candidate
+production-image and live acceptance checks. The web runtime review remains open.
