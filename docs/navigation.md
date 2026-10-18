@@ -15,8 +15,10 @@ attempts. Retry Route permits another attempt on a new location update.
 
 End Route stops speech, removes the route, and returns the map to follow-me mode.
 Sign-out and changing servers also end guidance. In this foreground implementation,
-leaving the phone scene pauses speech and pending route work. A fresh location is
-required after returning. Background guidance is not yet implemented or verified.
+speech and pending route work pause when both the phone and CarPlay scenes are
+inactive. An active car scene keeps the shared navigation session available. A
+fresh location is required after both scenes were inactive. Operation with both
+scenes inactive is not yet implemented or verified.
 
 Locations, searches, and routes remain in memory. MapKit receives the inputs for
 its search and route services. The lightning backend receives no trip data.

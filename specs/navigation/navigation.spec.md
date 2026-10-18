@@ -130,10 +130,13 @@ and road testing must validate them before release.
   A missing current location after calculation must suppress guidance until a
   usable fix arrives. It must not invent vehicle progress.
 
-During foreground-only implementation, an inactive phone scene must stop speech
-and invalidate pending route work while retaining the selected route in memory.
-It must not advance guidance until a new valid location arrives after activation.
-This interim behavior does not resolve the open background-navigation decision.
+During foreground-only implementation, guidance must pause speech and invalidate
+pending route work when neither the phone nor CarPlay scene is active, while
+retaining the selected route in memory. An active CarPlay scene must keep shared
+guidance available when the phone scene becomes inactive. Guidance must wait for
+a new valid location after both scenes were inactive. See the authoritative
+[scene lifecycle rules](carplay.spec.md#scene-lifecycle). This interim behavior
+does not resolve the open background-navigation decision.
 
 The phone must show search results in a dismissible sheet. Route preview must
 remain visible on the map when the sheet closes. A driver may reopen the sheet
