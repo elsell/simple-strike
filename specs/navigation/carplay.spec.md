@@ -50,9 +50,9 @@ The navigation entitlement and Apple's approval remain external requirements.
   Phone URL callbacks and universal links must continue to reach OIDC sign-in.
 - An active CarPlay scene counts as an active app surface for feed and guidance
   work. Inactive phone UI must not pause an active car session.
-- When neither scene is active, the current foreground-only policy pauses work.
-  This does not settle the open decision about background navigation when all
-  scenes are inactive.
+- When neither scene is active, lightning polling and animation must pause.
+  An active route must retain its independent background location subscription
+  and guidance under the [navigation policy](navigation.spec.md).
 - Scene disconnection must release its map and template observers. It must not
   sign out the phone or create a second location or speech session.
 - Identical usable location fixes delivered by both map surfaces must be

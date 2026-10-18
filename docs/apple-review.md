@@ -32,7 +32,7 @@ review access must not depend on an undisclosed account-specific feature switch.
 | --- | --- |
 | App identifier | `com.elsell.simplestrike` |
 | OIDC callback | `simplestrike://callback` |
-| Public HTTPS demo backend | Not provisioned; local-only checks do not satisfy this |
+| Public HTTPS demo backend | `https://demo.simplestrike.online`, selected; deployment and reachability verification pending |
 | Public HTTPS Dex issuer | Not provisioned; configure its exact issuer and redirect URI |
 | Published demo account | `demo@example.com`, password `password`, for isolated demo data only |
 | Review contact and support URL | Owner must supply these before submission |
@@ -91,8 +91,8 @@ does not grant that capability. Configure release HTTPS endpoints and build with
 the resulting signed app on a physical device and CarPlay before submitting it.
 
 Keep the demo backend reachable throughout review. Supply the complete walkthrough
-and intended live-data behavior. Resolve the open all-scenes-inactive navigation
-policy before describing background operation as supported.
+and intended live-data behavior. Verify active-route guidance with both displays inactive before claiming tested
+background operation. Follow-me without a route must stop background tracking.
 
 Apple references, checked 2026-10-18:
 [CarPlay program](https://developer.apple.com/carplay/),

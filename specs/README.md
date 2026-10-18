@@ -9,7 +9,7 @@
 | Lightning map | [Map](lightning/map.spec.md) | Core behavior approved; edge cases open |
 | Data source | [Data source](lightning/data-source.spec.md) | Single-adapter backend and OIDC approved |
 | Backend connection | [Connection](lightning/connection.spec.md) | Single-backend setup and session isolation |
-| Navigation | [Navigation](navigation/navigation.spec.md) | Optional driving navigation approved; background behavior open |
+| Navigation | [Navigation](navigation/navigation.spec.md) | Optional driving navigation and active-route background guidance approved |
 | CarPlay | [Native CarPlay](navigation/carplay.spec.md) | Scene integration in progress; native evidence and entitlement pending |
 | Audit | [Audit](audit/audit.spec.md) | Generated |
 

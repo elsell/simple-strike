@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Guidance, RoutePlanner, usableNavigationFix, type NavigationFix, type Place, type MapPosition } from '@simple-strike/client-core';
 import type { Translator } from '@simple-strike/i18n';
-import { mapKitRoutePort, navigationSpeech } from '../modules/strike-map/routes';
+import { mapKitRoutePort, navigationSpeech, navigationLocation } from '../modules/strike-map/routes';
 
-export function useDrivingNavigation(translator: Translator, active: boolean) {
+import { navigationActivity, openNavigationLocation } from './navigation-location';
+
+export function useDrivingNavigation(translator: Translator, active: boolean, authorized = true) {
   const [planner] = useState(() => new RoutePlanner(mapKitRoutePort));
   const [guidance] = useState(() => new Guidance(mapKitRoutePort, navigationSpeech(translator.locale), { now: () => Date.now() }, translator.t('navigation.arrived')));
   const [preview, setPreview] = useState(() => planner.snapshot());
@@ -11,20 +13,29 @@ export function useDrivingNavigation(translator: Translator, active: boolean) {
   const [open, setOpen] = useState(false);
   const [startFailed, setStartFailed] = useState(false);
   const mounted = useRef(true);
-  const enabled = useRef(active); enabled.current = active;
+  const activity = navigationActivity(active, authorized, session.phase);
+  const enabled = useRef(activity.running); enabled.current = activity.running;
+  const callbacks = useRef({ receive, unavailable });
+  callbacks.current = { receive, unavailable };
+  useEffect(() => {
+    if (!activity.background) return;
+    return openNavigationLocation(navigationLocation,
+      fix => callbacks.current.receive(fix),
+      state => { if (state !== 'authorized') callbacks.current.unavailable(); });
+  }, [activity.background]);
   const location = useRef<NavigationFix | null>(null);
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; planner.cancel(); guidance.end(); };
   }, [planner, guidance]);
   useEffect(() => {
-    if (!active) {
+    if (!activity.running) {
       location.current = null; planner.cancel(); guidance.pause();
       setPreview(planner.snapshot()); setSession(guidance.snapshot()); setOpen(false);
     }
-  }, [active, planner, guidance]);
+  }, [activity.running, planner, guidance]);
   useEffect(() => {
-    if (!active) return;
+    if (!activity.running) return;
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       if (location.current && !usableNavigationFix(location.current, Date.now())) {
@@ -34,7 +45,7 @@ export function useDrivingNavigation(translator: Translator, active: boolean) {
     };
     timer = setTimeout(tick, 1000);
     return () => clearTimeout(timer);
-  }, [active, guidance]);
+  }, [activity.running, guidance]);
   async function search(query: string, near: MapPosition) {
     if (!enabled.current) return;
     const work = planner.search(query, near); setPreview(planner.snapshot());

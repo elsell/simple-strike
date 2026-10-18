@@ -60,12 +60,24 @@ that routine decisions use established platform practice.
 
 ## Remaining decisions and evidence
 
-Background/locked-phone location behavior during active guidance still requires
-an answer to the pending product question. Foreground route work may proceed,
-but it does not establish background navigation or CarPlay completion. Maneuver
-matching, deviation thresholds, and speech timing must be specified with their
-behavioral tests before implementation. Native interaction evidence and Apple
-entitlement remain required. No approval outcome is assumed.
+The user authorized conventional background navigation on October 18, 2026.
+An active driving route must continue location-based progress, rerouting, and
+spoken instructions when both displays are inactive, subject to iOS execution
+and location permission. Route preview and follow-me alone must not enable
+background location. Arrival, End Route, sign-out, and backend replacement must
+stop the route's background location subscription and release speech audio.
+A background location subscription must be independent of either map view.
+Closing a subscription before native startup completes must still release it;
+a late close from an old session must not stop a newer session.
+
+Lightning polling and animation must pause when neither display is active.
+Location must remain on the device except for MapKit route calculations. The app
+must use When In Use permission with the navigation background capability and
+system indicator; it must not request Always permission or restart a terminated
+trip. Missing or stale fixes must still pause instructions. A valid new fix may
+resume the route. These rules need native background interaction evidence.
+Native interaction evidence and Apple entitlement remain required. No approval
+outcome is assumed.
 
 ## Route geometry matching
 
@@ -130,13 +142,9 @@ and road testing must validate them before release.
   A missing current location after calculation must suppress guidance until a
   usable fix arrives. It must not invent vehicle progress.
 
-During foreground-only implementation, guidance must pause speech and invalidate
-pending route work when neither the phone nor CarPlay scene is active, while
-retaining the selected route in memory. An active CarPlay scene must keep shared
-guidance available when the phone scene becomes inactive. Guidance must wait for
-a new valid location after both scenes were inactive. See the authoritative
-[scene lifecycle rules](carplay.spec.md#scene-lifecycle). This interim behavior
-does not resolve the open background-navigation decision.
+An active CarPlay scene must keep shared guidance available when the phone scene
+becomes inactive. When both displays are inactive, the active-route policy above
+applies. See the [scene lifecycle rules](carplay.spec.md#scene-lifecycle).
 
 The phone must show search results in a dismissible sheet. Route preview must
 remain visible on the map when the sheet closes. A driver may reopen the sheet

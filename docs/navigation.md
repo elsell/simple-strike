@@ -1,6 +1,6 @@
 # Driving navigation
 
-Status: foreground iOS implementation. Native interaction verification and
+Status: iOS implementation with active-route background guidance. Native interaction verification and
 CarPlay integration are not complete.
 
 Select Navigate on the map. Search for an address or place, then select a result.
@@ -14,11 +14,12 @@ destination. Failed recalculations retry at least 30 seconds apart, up to three
 attempts. Retry Route permits another attempt on a new location update.
 
 End Route stops speech, removes the route, and returns the map to follow-me mode.
-Sign-out and changing servers also end guidance. In this foreground implementation,
-speech and pending route work pause when both the phone and CarPlay scenes are
-inactive. An active car scene keeps the shared navigation session available. A
-fresh location is required after both scenes were inactive. Operation with both
-scenes inactive is not yet implemented or verified.
+Sign-out and changing servers also end guidance. An active route keeps location
+updates and spoken instructions when both displays are inactive, subject to iOS
+execution and location permission. The system location indicator remains visible.
+Arrival and End Route stop background tracking. Follow-me without an active route
+does not track in the background. Lightning polling pauses while both displays
+are inactive. Native background interaction verification remains required.
 
 Locations, searches, and routes remain in memory. MapKit receives the inputs for
 its search and route services. The lightning backend receives no trip data.

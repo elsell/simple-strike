@@ -8,6 +8,7 @@ final class LocationSource: NSObject, CLLocationManagerDelegate {
     let state: (String) -> Void
   }
   private let manager = CLLocationManager()
+  private var navigationOwners = Set<UUID>()
   private var observers: [UUID: Observer] = [:]
   private override init() {
     super.init()
@@ -20,7 +21,12 @@ final class LocationSource: NSObject, CLLocationManagerDelegate {
     if manager.authorizationStatus == .notDetermined { manager.requestWhenInUseAuthorization() }
     updateActivity()
   }
+  func navigation(_ id: UUID, fix: @escaping ([String: Any]) -> Void, state: @escaping (String) -> Void) {
+    navigationOwners.insert(id)
+    observe(id, fix: fix, state: state)
+  }
   func remove(_ id: UUID) {
+    navigationOwners.remove(id)
     observers.removeValue(forKey: id)
     updateActivity()
   }
@@ -34,6 +40,10 @@ final class LocationSource: NSObject, CLLocationManagerDelegate {
     @unknown default: state = "unavailable"
     }
     for observer in Array(observers.values) { observer.state(state) }
+    let navigating = !navigationOwners.isEmpty && state == "authorized"
+    manager.allowsBackgroundLocationUpdates = navigating
+    manager.showsBackgroundLocationIndicator = navigating
+    manager.pausesLocationUpdatesAutomatically = !navigating
     if !observers.isEmpty && state == "authorized" { manager.startUpdatingLocation() }
     else { manager.stopUpdatingLocation() }
   }

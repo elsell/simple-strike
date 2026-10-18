@@ -3,9 +3,10 @@ import ExpoModulesCore
 public class StrikeMapModule: Module {
   private let speech = NavigationSpeech()
   private let carOwner = UUID()
+  private var locationGeneration = 0
   public func definition() -> ModuleDefinition {
     Name("StrikeMap")
-    Events("carPlayCommand", "carPlayActivity")
+    Events("carPlayCommand", "carPlayActivity", "navigationLocation", "navigationLocationState")
     OnCreate {
       DispatchQueue.main.async { [weak self] in
         guard let self else { return }
@@ -16,8 +17,21 @@ public class StrikeMapModule: Module {
     }
     OnDestroy {
       let owner = self.carOwner
-      DispatchQueue.main.async { CarPlayBridge.shared.detach(owner: owner) }
+      DispatchQueue.main.async {
+        CarPlayBridge.shared.detach(owner: owner)
+        LocationSource.shared.remove(owner)
+      }
     }
+    AsyncFunction("beginNavigationLocation") { () -> Int in
+      self.locationGeneration += 1
+      LocationSource.shared.navigation(self.carOwner,
+        fix: { [weak self] value in self?.sendEvent("navigationLocation", value) },
+        state: { [weak self] value in self?.sendEvent("navigationLocationState", ["state": value]) })
+      return self.locationGeneration
+    }.runOnQueue(.main)
+    AsyncFunction("endNavigationLocation") { (generation: Int) in
+      if generation == self.locationGeneration { LocationSource.shared.remove(self.carOwner) }
+    }.runOnQueue(.main)
     AsyncFunction("beginCarPresentation") { () -> Int in
       CarPlayBridge.shared.beginSession()
     }.runOnQueue(.main)

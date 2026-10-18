@@ -21,7 +21,7 @@ export default function LightningScreen(props: LightningScreenProps) {
   const [phoneActive, setPhoneActive] = useState(AppState.currentState === 'active');
   const [carActive, setCarActive] = useState(false);
   const active = phoneActive || carActive;
-  const navigation = useDrivingNavigation(props.translator, active && cache.snapshot().connection !== 'denied');
+  const navigation = useDrivingNavigation(props.translator, active, cache.snapshot().connection !== 'denied');
   const [now, setNow] = useState(clock.now());
   const [locationState, setLocationState] = useState('undetermined');
   const [vehicleAvailable, setVehicleAvailable] = useState(false);
