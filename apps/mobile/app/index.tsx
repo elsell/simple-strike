@@ -78,6 +78,7 @@ export default function Home() {
     <CarPlaySetup translator={i18n} />
     <Text style={styles.title} accessibilityRole="header">{i18n.t('app.title')}</Text>
     <Text>{i18n.t('connection.description')}</Text>
+    <Text>{i18n.t('connection.address')}</Text>
     <TextInput style={styles.input} accessibilityLabel={i18n.t('connection.address')} placeholder={i18n.t('connection.address')} value={address} onChangeText={setAddress} autoCapitalize="none" autoCorrect={false} keyboardType="url" editable={ready && !busy} />
     {error ? <Text accessibilityRole="alert">{i18n.t(error)}</Text> : null}
     {!ready || busy ? <Text>{i18n.t('common.loading')}</Text> : null}

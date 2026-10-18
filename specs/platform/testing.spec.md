@@ -412,6 +412,14 @@ material, build caches, or backend credentials. This development build requires
 Metro and the demo backend. Artifact availability does not prove launch, map
 interaction, device signing, or CarPlay acceptance.
 
+An affected iOS build must also install and launch its exact simulator app in a
+fresh, task-owned simulator. The check must load the development bundle from a
+local Metro process, capture a screenshot, and verify the signed-out backend
+setup screen by recognized text. A living process or a splash screen alone must
+not pass. The screenshot and recognized text must be retained for inspection.
+The check must clean up only its own simulator and Metro process. This smoke
+check does not establish CarPlay, authenticated map behavior, or route guidance.
+
 The temporary production-dependency deployment used by the audit gate must run
 in an isolated workspace copy. It must not change the installed development
 dependency graph used by contract generation and subsequent checks.

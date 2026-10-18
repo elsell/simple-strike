@@ -162,6 +162,12 @@ The downloaded build uses development endpoints. Do not publish it as a signed
 release. Continue with the map acceptance procedure; downloading or installing
 an artifact is not evidence that those scenarios passed.
 
+The iOS job also runs `python3 scripts/ios-launch-smoke.py` after building. It
+creates a fresh simulator, runs local Metro, and checks the visible backend setup
+screen. The `ios-launch-<revision>` artifact contains its screenshot, recognized
+text, and result. Inspect the screenshot as well as the result. This check covers
+signed-out phone startup only. It does not verify sign-in, maps, or CarPlay.
+
 ### Demo map acceptance on an iOS simulator
 
 Run this procedure on macOS against an isolated local demo deployment. Record the
