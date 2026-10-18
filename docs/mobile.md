@@ -202,6 +202,9 @@ procedure, not evidence that the checks have passed.
 Record failures separately from passed cases. CarPlay, turn-by-turn guidance,
 physical-device behavior, and Apple approval require their own verification.
 
+The [Apple review draft](apple-review.md) records the product explanation, demo
+access requirements, data inventory, and signing steps. It is not submission-ready.
+
 Before requesting Apple review:
 
 1. Demonstrate destination entry, route progress, spoken maneuvers, rerouting,
