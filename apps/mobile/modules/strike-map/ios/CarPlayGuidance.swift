@@ -37,7 +37,7 @@ final class CarPlayGuidance {
       let origin = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: first.latitude, longitude: first.longitude)))
       let destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: last.latitude, longitude: last.longitude)))
       destination.name = value.destinationName
-      let choice = CPRouteChoice(summaryVariants: [value.routeSummary], additionalInformationVariants: [], selectionSummaryVariants: [value.routeSummary])
+      let choice = CPRouteChoice(summaryVariants: [value.routeSummary], additionalInformationVariants: [value.destinationName], selectionSummaryVariants: [value.routeSummary])
       trip = CPTrip(origin: origin, destination: destination, routeChoices: [choice])
       routeID = value.routeId
       if value.guidancePhase == "idle", let trip {
