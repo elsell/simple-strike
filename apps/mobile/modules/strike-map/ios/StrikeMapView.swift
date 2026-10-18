@@ -6,6 +6,8 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   private var radius = 32186.88
   private var mapCenter = CLLocationCoordinate2D(latitude: 27.95, longitude: -82.46)
   private var annotations: [String: MKPointAnnotation] = [:]
+  private var routeLine: MKPolyline?
+  private var routeCoordinates: [CLLocationCoordinate2D] = []
   private var rings: [String: ThunderOverlay] = [:]
   let onExplore = EventDispatcher()
   let onLocation = EventDispatcher()
@@ -58,7 +60,7 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
 
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
     guard let location = locations.last, location.horizontalAccuracy >= 0 else { return }
-    onLocation(["latitude": location.coordinate.latitude, "longitude": location.coordinate.longitude])
+    onLocation(["latitude": location.coordinate.latitude, "longitude": location.coordinate.longitude, "accuracyMeters": location.horizontalAccuracy, "timestampMs": location.timestamp.timeIntervalSince1970 * 1000])
   }
 
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -106,6 +108,19 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     }
   }
 
+  func updateRoute(_ values: [CoordinateRecord]) {
+    let coordinates = values.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+    guard coordinates.allSatisfy({ CLLocationCoordinate2DIsValid($0) }) else { return }
+    if coordinates.count == routeCoordinates.count && zip(coordinates, routeCoordinates).allSatisfy({ pair in pair.0.latitude == pair.1.latitude && pair.0.longitude == pair.1.longitude }) { return }
+    if let previous = routeLine { map.removeOverlay(previous) }
+    routeLine = nil
+    routeCoordinates = coordinates
+    guard coordinates.count >= 2 else { return }
+    let line = MKPolyline(coordinates: coordinates, count: coordinates.count)
+    routeLine = line
+    map.addOverlay(line, level: .aboveRoads)
+  }
+
   func updateRings(_ values: [RingRecord]) {
     let retained = Set(values.map { $0.id })
     for id in Array(rings.keys) where !retained.contains(id) {
@@ -127,6 +142,12 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   }
 
   func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+    if let line = overlay as? MKPolyline {
+      let renderer = MKPolylineRenderer(polyline: line)
+      renderer.strokeColor = UIColor.systemBlue
+      renderer.lineWidth = 6
+      return renderer
+    }
     guard let thunder = overlay as? ThunderOverlay else { return MKOverlayRenderer(overlay: overlay) }
     let renderer = ThunderRenderer(overlay: thunder)
     renderer.refresh()

@@ -3,6 +3,8 @@ import { AppState } from 'react-native';
 import { createLightningApiClient } from '@simple-strike/api-client';
 import { closestStrike, LightningFeed, MapSession, RecentLightning, readLightningWithSession } from '@simple-strike/client-core';
 import DrivingMap from './DrivingMap.ios';
+import NavigationSheet from './NavigationSheet.ios';
+import { useDrivingNavigation } from './useDrivingNavigation.ios';
 import type { LightningScreenProps } from './LightningScreen';
 
 const clock = { now: () => Date.now() };
@@ -13,6 +15,7 @@ export default function LightningScreen(props: LightningScreenProps) {
   const [cache] = useState(() => new RecentLightning(clock));
   const [map] = useState(() => new MapSession({ latitude: 27.95, longitude: -82.46 }));
   const [active, setActive] = useState(AppState.currentState === 'active');
+  const navigation = useDrivingNavigation(props.translator, active);
   const [now, setNow] = useState(clock.now());
   const [locationState, setLocationState] = useState('undetermined');
   const [vehicleAvailable, setVehicleAvailable] = useState(false);
@@ -93,12 +96,17 @@ export default function LightningScreen(props: LightningScreenProps) {
     return { id: strike.id, ...strike.position, radiusMeters: age / 1000 * 343,
       opacity: 1 - progress, fillOpacity: 0.13 * (1 - progress), lineWidth: 1 + 3 * progress };
   });
-  return <DrivingMap map={viewport} feed={snapshot} rings={rings} translator={t}
+  return <><DrivingMap map={viewport} feed={snapshot} navigation={navigation} rings={rings} translator={t}
     locationEnabled={active} vehicleAvailable={vehicleAvailable} locationState={locationState} closestText={closestText}
-    onLocation={position => { map.updatePosition(position); setVehicleAvailable(true); setLocationState('authorized'); redraw(value => value + 1); }}
-    onLocationState={state => { setLocationState(state); if (state !== 'authorized') setVehicleAvailable(false); }}
+    onLocation={position => { navigation.receive(position); map.updatePosition(position); setVehicleAvailable(true); setLocationState('authorized'); redraw(value => value + 1); }}
+    onLocationState={state => { setLocationState(state); if (state !== 'authorized') { setVehicleAvailable(false); navigation.unavailable(); } }}
     onExplore={position => { map.explore(position, position.radiusMeters); redraw(value => value + 1); }}
+    onStartRoute={() => { if (navigation.start()) { map.recenter(); redraw(value => value + 1); } }}
+    onEndRoute={() => { navigation.end(); map.endRoute(); redraw(value => value + 1); }}
     onRecenter={() => { map.recenter(); redraw(value => value + 1); }}
     onZoomIn={() => { map.zoomIn(); redraw(value => value + 1); }}
-    onZoomOut={() => { map.zoomOut(); redraw(value => value + 1); }} />;
+    onZoomOut={() => { map.zoomOut(); redraw(value => value + 1); }} />
+    <NavigationSheet navigation={navigation} translator={t} near={viewport.center} vehicleAvailable={vehicleAvailable}
+      onStart={() => { if (navigation.start()) { map.recenter(); redraw(value => value + 1); } }} />
+  </>;
 }

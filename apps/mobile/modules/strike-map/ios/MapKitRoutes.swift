@@ -27,6 +27,25 @@ enum MapKitRoutes {
     ]
   }
 
+  static func search(query: String, near: CoordinateRecord) async throws -> [[String: Any]] {
+    let center = CLLocationCoordinate2D(latitude: near.latitude, longitude: near.longitude)
+    guard CLLocationCoordinate2DIsValid(center) else { throw Failure.invalidCoordinate }
+    let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !text.isEmpty else { return [] }
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = text
+    request.region = MKCoordinateRegion(center: center, latitudinalMeters: 64373.76, longitudinalMeters: 64373.76)
+    let response = try await MKLocalSearch(request: request).start()
+    return response.mapItems.prefix(20).map { item in
+      let coordinate = item.placemark.coordinate
+      return [
+        "id": UUID().uuidString,
+        "name": item.name ?? item.placemark.title ?? "\(coordinate.latitude), \(coordinate.longitude)",
+        "position": ["latitude": coordinate.latitude, "longitude": coordinate.longitude]
+      ] as [String: Any]
+    }
+  }
+
   private static func coordinates(_ line: MKPolyline) -> [[String: Double]] {
     var values = Array(repeating: CLLocationCoordinate2D(), count: line.pointCount)
     line.getCoordinates(&values, range: NSRange(location: 0, length: values.count))

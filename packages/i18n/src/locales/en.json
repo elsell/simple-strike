@@ -54,5 +54,21 @@
   "connection.connect": "Connect",
   "connection.change": "Change Server",
   "connection.failed": "Cannot connect. Check the server address and try again.",
-  "connection.storageError": "Cannot read or save the connection. Try again."
+  "connection.storageError": "Cannot read or save the connection. Try again.",
+  "navigation.navigate": "Navigate",
+  "navigation.destination": "Address or place",
+  "navigation.search": "Search",
+  "navigation.noResults": "No places found. Try another search.",
+  "navigation.failed": "Could not find a route. Try again.",
+  "navigation.locationRequired": "A current, accurate location is required for guidance.",
+  "navigation.summary": "{{distance}} mi · about {{minutes}} min",
+  "navigation.start": "Start Route",
+  "navigation.end": "End Route",
+  "navigation.clear": "Clear Preview",
+  "navigation.arrived": "You have arrived.",
+  "navigation.rerouting": "Finding a new route…",
+  "navigation.offRoute": "Off route",
+  "navigation.guiding": "Route guidance",
+  "navigation.remaining": "{{distance}} mi remaining",
+  "navigation.retry": "Retry Route"
 }

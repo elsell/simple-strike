@@ -5,10 +5,11 @@
 | Public bootstrap | [Bootstrap](platform/bootstrap.spec.md) | Required now |
 | Platform boundaries | [Architecture](platform/architecture.spec.md) | Generated |
 | Verification | [Testing](platform/testing.spec.md) | Generated |
-| Delivery | [Roadmap](platform/roadmap.spec.md) | Connection setup in progress; demo map awaiting verification |
+| Delivery | [Roadmap](platform/roadmap.spec.md) | Navigation in progress; map and connection awaiting verification |
 | Lightning map | [Map](lightning/map.spec.md) | Core behavior approved; edge cases open |
 | Data source | [Data source](lightning/data-source.spec.md) | Single-adapter backend and OIDC approved |
 | Backend connection | [Connection](lightning/connection.spec.md) | Single-backend setup and session isolation |
+| Navigation | [Navigation](navigation/navigation.spec.md) | Optional driving navigation approved; background behavior open |
 | Audit | [Audit](audit/audit.spec.md) | Generated |
 
 Consequential open questions require explicit product approval. Routine choices

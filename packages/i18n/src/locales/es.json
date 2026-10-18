@@ -54,5 +54,21 @@
   "connection.connect": "Conectar",
   "connection.change": "Cambiar servidor",
   "connection.failed": "No se puede conectar. Comprueba la dirección del servidor e inténtalo de nuevo.",
-  "connection.storageError": "No se puede leer o guardar la conexión. Inténtalo de nuevo."
+  "connection.storageError": "No se puede leer o guardar la conexión. Inténtalo de nuevo.",
+  "navigation.navigate": "Navegar",
+  "navigation.destination": "Dirección o lugar",
+  "navigation.search": "Buscar",
+  "navigation.noResults": "No se encontraron lugares. Prueba otra búsqueda.",
+  "navigation.failed": "No se pudo encontrar una ruta. Inténtalo de nuevo.",
+  "navigation.locationRequired": "Se necesita una ubicación actual y precisa para las indicaciones.",
+  "navigation.summary": "{{distance}} mi · unos {{minutes}} min",
+  "navigation.start": "Iniciar ruta",
+  "navigation.end": "Finalizar ruta",
+  "navigation.clear": "Borrar vista previa",
+  "navigation.arrived": "Has llegado.",
+  "navigation.rerouting": "Buscando una nueva ruta…",
+  "navigation.offRoute": "Fuera de la ruta",
+  "navigation.guiding": "Indicaciones de ruta",
+  "navigation.remaining": "Quedan {{distance}} mi",
+  "navigation.retry": "Reintentar ruta"
 }

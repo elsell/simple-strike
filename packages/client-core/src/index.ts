@@ -176,3 +176,7 @@ export { LightningFeed, readLightningWithSession, type FeedSnapshot, type FeedSo
 export { RecentLightning, type RecentSnapshot } from './recent-lightning';
 export { closestStrike, distanceMeters, type Strike, type StrikeDistance, type Eligibility, type Clock } from './closest-strike';
 export { SessionScope, type SessionStorage } from './session-scope';
+export { RoutePlanner, type RoutePort, type Route, type Place, type RoutePreview } from './route-planner';
+export { RouteGeometry, type RouteMatch } from './route-geometry';
+export { RouteProgress, usableNavigationFix, type NavigationFix, type ProgressSnapshot } from './route-progress';
+export { Guidance, type GuidanceSnapshot, type SpeechPort } from './guidance';
