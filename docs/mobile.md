@@ -232,3 +232,13 @@ Apple supplies the navigation map surface through
 control layer through
 [CPMapTemplate](https://developer.apple.com/documentation/carplay/cpmaptemplate).
 Keep native CarPlay verification separate from the earlier browser prototype.
+
+## Hosted interaction checks
+
+Mac verification runs on macOS CI. The native job uses XCUITest to drive the
+built app's backend address field, empty-address button state, invalid-address
+feedback, and relaunch. Download the `ios-interaction` artifact and open its
+`results.xcresult` in Xcode to inspect test results and screenshots. The artifact
+includes the tested revision. These initial checks do not establish authenticated
+map, route, background speech, or CarPlay behavior. Expand the same suite against
+the reachable demo stack before claiming those workflows pass.

@@ -451,3 +451,15 @@ amd64 and arm64 image manifests with its October 17 database. The index signatur
 The image retains the minimal static-runtime role. This base-image check does
 not establish a clean final application image or replace exact-candidate
 production-image and live acceptance checks. The web runtime review remains open.
+
+## Hosted native interaction acceptance
+
+Mac requirements must use hosted macOS CI runners. Native UI acceptance must run
+XCUITest against the built application with real controls and secure storage.
+It must retain an XCTest result bundle and the tested Git revision. The first
+connection scenarios must prove that an empty address disables Connect, an
+invalid address produces localized feedback, and relaunch restores a usable
+setup form without a storage error. These scenarios do not prove successful
+OIDC sign-in, map behavior, background navigation, or CarPlay interaction.
+The public demo endpoint is `https://demo.simplestrike.online`; authenticated
+scenarios require its verified deployment or an equivalent controlled full stack.
