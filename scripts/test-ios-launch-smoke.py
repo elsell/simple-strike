@@ -21,6 +21,9 @@ class LaunchEvidenceTests(unittest.TestCase):
         self.assertFalse(smoke.setup_visible(['Simple Strike', 'Backend URL',
             'Cannot read or save the connection. Try again.', 'Connect']))
 
+    def test_pending_storage_is_not_successful_setup(self):
+        self.assertFalse(smoke.setup_visible(['Simple Strike', 'Backend URL', 'Loading…', 'Connect']))
+
     def test_selects_an_available_iphone_runtime(self):
         devices = {'devices': {
             'com.apple.CoreSimulator.SimRuntime.iOS-26-0': [{'name':'iPhone 17','isAvailable':True,'deviceTypeIdentifier':'phone'}],

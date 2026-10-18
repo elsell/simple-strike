@@ -420,6 +420,8 @@ not pass. The screenshot and recognized text must be retained for inspection.
 The simulator build must retain Xcode's application identity for Keychain access.
 It must not require a developer certificate or provisioning profile. A fresh
 installation showing a connection-storage error must fail the startup check.
+The setup screen must finish storage initialization before the check passes;
+visible loading text is not readiness.
 The Metro readiness probe must use the IPv4 loopback address requested by the
 native development bundle loader. A successful IPv6 localhost probe alone must
 not establish readiness. The hosted test may bind Metro to all interfaces on
