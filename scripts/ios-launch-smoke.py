@@ -49,9 +49,6 @@ def main():
     with (app / 'Info.plist').open('rb') as source:
         info = plistlib.load(source)
     bundle = info['CFBundleIdentifier']
-    schemes = [scheme for item in info.get('CFBundleURLTypes', []) for scheme in item.get('CFBundleURLSchemes', []) if scheme.startswith('exp+')]
-    if len(schemes) != 1:
-        raise ValueError('Expected one Expo development-client scheme')
     device_type, runtime = simulator_type(json.loads(command('xcrun', 'simctl', 'list', 'devices', 'available', '--json')))
     device = command('xcrun', 'simctl', 'create', f'SimpleStrike-smoke-{uuid.uuid4()}', device_type, runtime)
     metro = None
@@ -79,9 +76,10 @@ def main():
                 if time.monotonic() >= deadline:
                     raise TimeoutError('Metro readiness timeout')
                 time.sleep(1)
-            pid = launch_pid(command('xcrun', 'simctl', 'launch', device, bundle, '-AppleLanguages', '(en)', '-AppleLocale', 'en_US'), bundle)
-            url = schemes[0] + '://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081&disableOnboarding=1&disableAutoLaunch=1'
-            command('xcrun', 'simctl', 'openurl', device, url)
+            # Expo's simulator launcher accepts a project URL without a system open-URL dialog.
+            pid = launch_pid(command('xcrun', 'simctl', 'launch', device, bundle,
+                '-AppleLanguages', '(en)', '-AppleLocale', 'en_US',
+                '--initialUrl', 'http://localhost:8081/?disableOnboarding=1'), bundle)
             deadline = time.monotonic() + 180
             while time.monotonic() < deadline:
                 os.kill(pid, 0)
