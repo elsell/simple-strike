@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/client-configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get public mobile sign-in configuration */
+        get: operations["get-client-configuration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/invitations": {
         parameters: {
             query?: never;
@@ -244,6 +261,24 @@ export interface components {
             readonly $schema?: string;
             data: components["schemas"]["AuthorizationDeadLetterDTO"][];
             meta: components["schemas"]["PaginationMeta"];
+        };
+        ClientConfigurationDTO: {
+            oidcClientId: string;
+            oidcIssuer: string;
+            /**
+             * Format: int64
+             * @enum {integer}
+             */
+            version: 1;
+        };
+        ClientConfigurationOutputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/ClientConfigurationOutputBody.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["ClientConfigurationDTO"];
         };
         DataStruct: {
             /** Format: date-time */
@@ -461,6 +496,35 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["APIError"];
+                };
+            };
+        };
+    };
+    "get-client-configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientConfigurationOutputBody"];
+                };
             };
             /** @description Error */
             default: {

@@ -40,9 +40,12 @@ Dex and published shared demo credentials. See the authoritative
 - A client receives normalized observations without receiving provider credentials.
 - One backend exposes one source, with no runtime user-facing provider selector.
 
+Backend connection setup is specified in [connection setup](connection.spec.md).
+
 ## Open questions
 
-- Backend connection setup and operator provisioning of feed-view permission.
+- Operator provisioning of feed-view permission.
+
 - Normalized observation identifiers, accuracy metadata, attribution, coverage,
   delay, freshness, health, retention, limits, and error contract.
 - Subscription transport, replay, reconnect, and duplicate handling.

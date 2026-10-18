@@ -171,6 +171,8 @@ export function retainedSessionExpiry(value: unknown, fallback: string): string 
 }
 
 export { MapSession, type MapPosition, type MapSnapshot } from './map-session';
+export { backendConnection, connectionIdentity, normalizeBackendURL } from './connection';
 export { LightningFeed, readLightningWithSession, type FeedSnapshot, type FeedSource, type FeedObserver } from './lightning-feed';
 export { RecentLightning, type RecentSnapshot } from './recent-lightning';
 export { closestStrike, distanceMeters, type Strike, type StrikeDistance, type Eligibility, type Clock } from './closest-strike';
+export { SessionScope, type SessionStorage } from './session-scope';

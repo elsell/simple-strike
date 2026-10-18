@@ -27,6 +27,7 @@ func TestInvitedEmailsAreNormalizedDeduplicatedAndValidated(t *testing.T) {
 
 func TestSecureConfigurationRejectsPlaintextBoundaries(t *testing.T) {
 	base := Config{PublicBaseURL: "https://api.example", DatabaseDSN: "postgres://app:secret@db.example/app?sslmode=verify-full", CursorSigningKey: "01234567890123456789012345678901", OIDCIssuer: "https://id.example/dex", OIDCAudiences: []string{"web", "mobile", "docs"}, OIDCDocsClientID: "docs", OIDCDocsRedirectURI: "https://api.example/docs", SpiceDBEndpoint: "spicedb.example:50051", SpiceDBToken: "secret", CORSAllowedOrigins: []string{"https://app.example"}, AuditEventsPerMinute: 120, AuditLimiterPrincipals: 10000, SessionTTLMinutes: 60, SessionAbsoluteTTLMinutes: 720}
+	base.OIDCMobileClientID = "mobile"
 	base.MetricsBearerToken = "01234567890123456789012345678901"
 	if err := base.validate(); err != nil {
 		t.Fatalf("secure config rejected: %v", err)
@@ -35,6 +36,8 @@ func TestSecureConfigurationRejectsPlaintextBoundaries(t *testing.T) {
 		name   string
 		change func(*Config)
 	}{
+		{"mobile client missing audience", func(c *Config) { c.OIDCMobileClientID = "other" }},
+		{"mobile client padded", func(c *Config) { c.OIDCMobileClientID = " mobile " }},
 		{"unknown lightning source", func(c *Config) { c.LightningSource = "unknown" }},
 		{"database TLS disabled", func(c *Config) { c.DatabaseDSN = "postgres://db.example/app?sslmode=disable" }},
 		{"OIDC plaintext", func(c *Config) { c.OIDCIssuer = "http://id.example/dex" }},

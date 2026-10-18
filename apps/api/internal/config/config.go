@@ -11,25 +11,25 @@ import (
 )
 
 type Config struct {
-	LightningSource                                                                                                                                                                       string
-	HTTPAddr, PublicBaseURL, DatabaseDSN, CursorSigningKey, OIDCIssuer, OIDCBackchannelURL, OIDCDocsClientID, OIDCDocsRedirectURI, SpiceDBEndpoint, SpiceDBToken, AccountProvisioningMode string
-	MetricsBearerToken                                                                                                                                                                    string
-	OTLPHTTPEndpoint, OTelServiceName                                                                                                                                                     string
-	OIDCAudiences                                                                                                                                                                         []string
-	AccountInvitedEmails                                                                                                                                                                  []string
-	InvitationAdminIdentities                                                                                                                                                             []string
-	DatabaseInsecure, OIDCInsecure, SpiceDBInsecure                                                                                                                                       bool
-	ScalarDocsDisabled                                                                                                                                                                    bool
-	AccountSelfDeactivationEnabled                                                                                                                                                        bool
-	OTLPInsecure                                                                                                                                                                          bool
-	CORSAllowedOrigins                                                                                                                                                                    []string
-	TrustedProxyCIDRs                                                                                                                                                                     []string
-	AuditEventsPerMinute, AuditLimiterPrincipals                                                                                                                                          int
-	DatabaseMaxOpenConns, DatabaseMaxIdleConns, DatabaseConnMaxLifetime, DatabaseConnMaxIdleTime                                                                                          int
-	SessionTTLMinutes                                                                                                                                                                     int
-	SessionAbsoluteTTLMinutes                                                                                                                                                             int
-	AuthorizationMaxAttempts                                                                                                                                                              int
-	RequestsPerMinute, RequestLimiterSources                                                                                                                                              int
+	LightningSource                                                                                                                                                                                           string
+	HTTPAddr, PublicBaseURL, DatabaseDSN, CursorSigningKey, OIDCIssuer, OIDCBackchannelURL, OIDCDocsClientID, OIDCDocsRedirectURI, OIDCMobileClientID, SpiceDBEndpoint, SpiceDBToken, AccountProvisioningMode string
+	MetricsBearerToken                                                                                                                                                                                        string
+	OTLPHTTPEndpoint, OTelServiceName                                                                                                                                                                         string
+	OIDCAudiences                                                                                                                                                                                             []string
+	AccountInvitedEmails                                                                                                                                                                                      []string
+	InvitationAdminIdentities                                                                                                                                                                                 []string
+	DatabaseInsecure, OIDCInsecure, SpiceDBInsecure                                                                                                                                                           bool
+	ScalarDocsDisabled                                                                                                                                                                                        bool
+	AccountSelfDeactivationEnabled                                                                                                                                                                            bool
+	OTLPInsecure                                                                                                                                                                                              bool
+	CORSAllowedOrigins                                                                                                                                                                                        []string
+	TrustedProxyCIDRs                                                                                                                                                                                         []string
+	AuditEventsPerMinute, AuditLimiterPrincipals                                                                                                                                                              int
+	DatabaseMaxOpenConns, DatabaseMaxIdleConns, DatabaseConnMaxLifetime, DatabaseConnMaxIdleTime                                                                                                              int
+	SessionTTLMinutes                                                                                                                                                                                         int
+	SessionAbsoluteTTLMinutes                                                                                                                                                                                 int
+	AuthorizationMaxAttempts                                                                                                                                                                                  int
+	RequestsPerMinute, RequestLimiterSources                                                                                                                                                                  int
 }
 
 func Load() (Config, error) {
@@ -53,6 +53,7 @@ func Load() (Config, error) {
 		OIDCIssuer:                     os.Getenv("SIMPLE_STRIKE_OIDC_ISSUER"),
 		OIDCBackchannelURL:             os.Getenv("SIMPLE_STRIKE_OIDC_BACKCHANNEL_URL"),
 		OIDCAudiences:                  list("SIMPLE_STRIKE_OIDC_AUDIENCES"),
+		OIDCMobileClientID:             os.Getenv("SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID"),
 		OIDCDocsClientID:               os.Getenv("SIMPLE_STRIKE_OIDC_DOCS_CLIENT_ID"),
 		OIDCDocsRedirectURI:            os.Getenv("SIMPLE_STRIKE_OIDC_DOCS_REDIRECT_URI"),
 		OIDCInsecure:                   boolean("SIMPLE_STRIKE_OIDC_INSECURE"),
@@ -124,6 +125,9 @@ func (c Config) validate() error {
 	}
 	if c.PublicBaseURL == "" || c.DatabaseDSN == "" || len(c.CursorSigningKey) < 32 || len(c.MetricsBearerToken) < 32 || c.OIDCIssuer == "" || len(c.OIDCAudiences) == 0 || c.SpiceDBEndpoint == "" {
 		return errors.New("database, OIDC audiences, and SpiceDB configuration is required")
+	}
+	if c.OIDCMobileClientID != "" && (!includes(c.OIDCAudiences, c.OIDCMobileClientID) || strings.TrimSpace(c.OIDCMobileClientID) != c.OIDCMobileClientID) {
+		return errors.New("mobile OIDC client must match an accepted audience")
 	}
 	if !c.ScalarDocsDisabled && (c.OIDCDocsClientID == "" || c.OIDCDocsRedirectURI == "") {
 		return errors.New("OIDC docs configuration is required while Scalar documentation is enabled")
