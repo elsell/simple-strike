@@ -127,6 +127,40 @@ Complete route guidance and the CarPlay scene remain unfinished. MapKit route
 calculation alone does not provide verified turn-by-turn navigation. Do not
 describe the current adapter as a finished CarPlay app.
 
+### Demo map acceptance on an iOS simulator
+
+Run this procedure on macOS against an isolated local demo deployment. Record the
+Git revision and simulator/iOS version with the results. These steps are a test
+procedure, not evidence that the checks have passed.
+
+1. Configure the root `.env` with the local API and issuer URLs above. Start the
+   demo stack with `docker compose -f compose.yaml -f compose.demo.yaml up -d --build`.
+2. Run `make mobile-dev-ios`. Sign in through the browser with the published Dex
+   demo account (`demo@example.com`, password `password`). Confirm the callback
+   returns to the app and the map shows a simulated-data label.
+3. Supply a simulated location near latitude 27.95, longitude -82.46 using the
+   simulator location controls. Grant location permission. Verify that the map
+   follows position updates and the nearest received strike shows distance and age.
+4. Drag the map, then update the simulated location. The viewport must stay where
+   it was dragged, while distance still uses the vehicle position. Recenter must
+   restore following. Pinch, use each zoom button, and recenter again. Buttons must
+   scale the visible zoom level, and recenter must preserve it.
+5. Observe rings over several updates. Check continuous expansion, fading white
+   outlines, and translucent dark interiors. Record a screen capture to assess
+   smoothness. Compilation and screenshots alone do not prove smooth animation.
+6. Stop only the API in this isolated stack. Confirm the disconnected label,
+   retained recent strikes, and expiry at five minutes from occurrence. Restart
+   the API and confirm automatic recovery without duplicate markers or sign-out.
+7. Deny location permission and relaunch. The map must remain browsable, hide
+   vehicle-relative distance, and disable recenter. Restore permission and verify
+   recovery after location updates resume.
+8. Background and foreground the app. Verify that reads pause and resume, expired
+   observations disappear, and current location following recovers. Sign out and
+   confirm that the map and its cached observations disappear.
+
+Record failures separately from passed cases. CarPlay, turn-by-turn guidance,
+physical-device behavior, and Apple approval require their own verification.
+
 Before requesting Apple review:
 
 1. Demonstrate destination entry, route progress, spoken maneuvers, rerouting,
