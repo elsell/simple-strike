@@ -368,3 +368,26 @@ The gate must reject malformed audit output, audit execution failures, altered o
 missing backport evidence, mismatched versions or package names, and all other
 advisories. In particular, the active `braces` finding must continue to fail the
 gate. This is not a general advisory allowlist or an exception for unpatched risk.
+
+### Remaining braces finding: reachability evidence and pending decision
+
+On 2026-10-18, the iOS export at the source state of `858f87f` produced a Hermes
+source map with 1,071 mapped sources. Neither `braces` nor `micromatch` appeared.
+The production web dependency deployment, produced with the Dockerfile's
+`pnpm --filter @simple-strike/web deploy --legacy --prod` command, contained 71
+packages and neither package. These checks do not prove native rendering or a
+clean production image scan. The Go API does not execute JavaScript dependencies.
+
+The lockfile introduces `braces@3.0.3` through `micromatch@4.0.8`, used by Metro,
+Jest, and file-globbing build tools. The raw audit still reports
+`GHSA-vfj7-8cjw-p6xm`, and the authority still publishes `CVE-2026-93687`.
+The maintainer disputes the issue, but that does not withdraw the advisory.
+No upstream fixed release has been verified.
+
+A possible policy exception is limited to this exact advisory and package version
+in development/build tooling, expires on 2026-11-17, preserves its raw finding,
+and requires automated checks that the shipped iOS and web artifacts exclude both
+packages. It would not accept new advisories, runtime inclusion, or arbitrary
+untrusted glob patterns. This changes the current active-advisory policy and is
+pending explicit user approval. The gate must continue to fail until that decision
+and its required artifact checks are implemented and reviewed.
