@@ -70,5 +70,8 @@
   "navigation.offRoute": "Fuera de la ruta",
   "navigation.guiding": "Indicaciones de ruta",
   "navigation.remaining": "Quedan {{distance}} mi",
-  "navigation.retry": "Reintentar ruta"
+  "navigation.retry": "Reintentar ruta",
+  "carplay.phoneSignIn": "Configura tu servidor e inicia sesión en el teléfono.",
+  "carplay.failed": "No se pudo actualizar la pantalla del coche. Vuelve a conectar CarPlay.",
+  "carplay.pan": "Mover mapa"
 }

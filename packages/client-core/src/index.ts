@@ -180,3 +180,4 @@ export { RoutePlanner, type RoutePort, type Route, type Place, type RoutePreview
 export { RouteGeometry, type RouteMatch } from './route-geometry';
 export { RouteProgress, usableNavigationFix, type NavigationFix, type ProgressSnapshot } from './route-progress';
 export { Guidance, type GuidanceSnapshot, type SpeechPort } from './guidance';
+export { CarPresentation, type CarPresentationPort } from './car-presentation';

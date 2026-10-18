@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Text } from 'react-native';
 import { createLightningApiClient } from '@simple-strike/api-client';
 import { closestStrike, LightningFeed, MapSession, RecentLightning, readLightningWithSession } from '@simple-strike/client-core';
 import DrivingMap from './DrivingMap.ios';
 import NavigationSheet from './NavigationSheet.ios';
 import { useDrivingNavigation } from './useDrivingNavigation.ios';
 import type { LightningScreenProps } from './LightningScreen';
+import { observeCarActivity, observeCarCommands, type CarCommand } from '../modules/strike-map/carplay';
+import { useCarPresentation } from './useCarPresentation.ios';
 
 const clock = { now: () => Date.now() };
 
@@ -14,7 +16,9 @@ export default function LightningScreen(props: LightningScreenProps) {
   current.current = props;
   const [cache] = useState(() => new RecentLightning(clock));
   const [map] = useState(() => new MapSession({ latitude: 27.95, longitude: -82.46 }));
-  const [active, setActive] = useState(AppState.currentState === 'active');
+  const [phoneActive, setPhoneActive] = useState(AppState.currentState === 'active');
+  const [carActive, setCarActive] = useState(false);
+  const active = phoneActive || carActive;
   const navigation = useDrivingNavigation(props.translator, active);
   const [now, setNow] = useState(clock.now());
   const [locationState, setLocationState] = useState('undetermined');
@@ -23,11 +27,15 @@ export default function LightningScreen(props: LightningScreenProps) {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => {
-      setActive(state === 'active');
-      if (state !== 'active') setVehicleAvailable(false);
+      setPhoneActive(state === 'active');
     });
     return () => subscription.remove();
   }, []);
+  useEffect(() => {
+    const subscription = observeCarActivity(setCarActive);
+    return () => subscription.remove();
+  }, []);
+  useEffect(() => { if (!active) setVehicleAvailable(false); }, [active]);
 
   useEffect(() => {
     if (!active) return;
@@ -96,7 +104,44 @@ export default function LightningScreen(props: LightningScreenProps) {
     return { id: strike.id, ...strike.position, radiusMeters: age / 1000 * 343,
       opacity: 1 - progress, fillOpacity: 0.13 * (1 - progress), lineWidth: 1 + 3 * progress };
   });
-  return <><DrivingMap map={viewport} feed={snapshot} navigation={navigation} rings={rings} translator={t}
+  const carCommands = useRef<(command: CarCommand) => void>(() => undefined);
+  carCommands.current = command => {
+    if (snapshot.connection === 'denied' || !active) return;
+    switch (command.name) {
+      case 'zoomIn': map.zoomIn(); break;
+      case 'zoomOut': map.zoomOut(); break;
+      case 'recenter': map.recenter(); break;
+      case 'pan': map.explore(command.values, command.values.radiusMeters); break;
+      case 'location': navigation.receive(command.values); map.updatePosition(command.values); setVehicleAvailable(true); setLocationState('authorized'); break;
+      case 'locationState': setLocationState(command.values.state); if (command.values.state !== 'authorized') { setVehicleAvailable(false); navigation.unavailable(); } break;
+      case 'search': void navigation.search(command.values.query, viewport.center); break;
+      case 'select': void navigation.select(command.values); break;
+      case 'startRoute': if (navigation.start()) map.recenter(); break;
+      case 'endRoute': navigation.end(); map.endRoute(); break;
+    }
+    redraw(value => value + 1);
+  };
+  useEffect(() => {
+    const subscription = observeCarCommands(command => carCommands.current(command));
+    return () => subscription.remove();
+  }, []);
+  const route = navigation.session.route ?? navigation.preview.route;
+  const progress = navigation.session.progress;
+  const carFailed = useCarPresentation({
+    authorized: snapshot.connection !== 'denied',
+    labels: { phoneSignIn: t.t('carplay.phoneSignIn'), navigate: t.t('navigation.navigate'), start: t.t('navigation.start'), end: t.t('navigation.end'),
+      close: t.t('common.close'), pan: t.t('carplay.pan'), source: t.t(snapshot.mode === null ? 'map.loadingFeed' : snapshot.mode === 'demo' ? 'map.demo' : 'map.live'),
+      estimatedThunder: t.t('map.estimatedThunder'), },
+    vehicleAvailable, vehicle: viewport.vehicle, center: viewport.center, radiusMeters: viewport.radiusMeters,
+    strikes: snapshot.strikes.map(strike => ({ id: strike.id, ...strike.position })), rings, route: route?.coordinates ?? [],
+    guidancePhase: navigation.session.phase,
+    destinationName: navigation.session.destination?.name ?? navigation.preview.destination?.name ?? '',
+    instruction: progress?.status === 'tracking' && navigation.session.phase === 'guiding' ? route?.steps[progress.stepIndex]?.instructions ?? '' : '',
+    distanceRemainingMeters: progress?.remainingMeters ?? route?.distanceMeters ?? 0,
+    expectedTravelSeconds: route?.expectedTravelSeconds ?? 0,
+    sourceMode: snapshot.mode ?? '', closestText: closestText ?? '',
+  });
+  return <>{carFailed ? <Text accessibilityRole="alert">{t.t('carplay.failed')}</Text> : null}<DrivingMap map={viewport} feed={snapshot} navigation={navigation} rings={rings} translator={t}
     locationEnabled={active} vehicleAvailable={vehicleAvailable} locationState={locationState} closestText={closestText}
     onLocation={position => { navigation.receive(position); map.updatePosition(position); setVehicleAvailable(true); setLocationState('authorized'); redraw(value => value + 1); }}
     onLocationState={state => { setLocationState(state); if (state !== 'authorized') { setVehicleAvailable(false); navigation.unavailable(); } }}

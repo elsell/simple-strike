@@ -9,6 +9,7 @@ import { activateExchangedSession } from './session-establishment';
 import { restoreStoredSession } from './session-restoration';
 import { useProviderSignIn } from './provider-auth';
 import LightningScreen from './LightningScreen';
+import CarPlaySetup from './CarPlaySetup';
 
 const i18n = createDeviceTranslator(getLocales);
 
@@ -155,6 +156,7 @@ export default function ConnectedHome({ config, scope, onChangeServer }: { confi
   </SafeAreaView>;
 
   return <SafeAreaView style={styles.account}>
+    <CarPlaySetup translator={i18n} />
     <Text style={styles.accountTitle}>{i18n.t('app.title')}</Text>
     <Text>{!ready ? i18n.t('common.loading') : i18n.t('auth.ready')}</Text>
     {errorKey ? <Text accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}

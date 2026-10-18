@@ -26,3 +26,22 @@ Behavioral tests exercise matching, maneuver progress, arrival, GPS quality,
 rerouting, bounded retries, and cancellation with controlled ports and clocks.
 The iOS JavaScript export passes. Neither result establishes a native driving
 experience, speech playback, or CarPlay acceptance.
+
+## CarPlay implementation status
+
+The native scene now has a MapKit surface, zoom and recenter buttons, a pan
+control, and a native list for lightning status. The presentation bridge uses
+session generations to reject late snapshots after disposal. Phone and car maps
+use one location source. A localized setup message sends sign-in to the phone.
+
+The Expo plugin registers phone and CarPlay scenes. It replaces eager phone-window
+startup with one retained React Native root. Either scene can start the runtime.
+Phone URL callbacks are forwarded to the original application handlers. Tests
+check the generated configuration and reject an unexpected startup template.
+These are configuration checks, not native lifecycle tests.
+
+CarPlay destination search, trip preview, and maneuver templates remain unfinished.
+The latest scene and startup code still needs a clean Xcode build and native
+interaction checks. Cold car launch, phone attachment, phone lock, reconnection,
+and sign-out must pass before this integration can be called complete. The
+navigation entitlement declaration does not grant Apple's capability or approval.

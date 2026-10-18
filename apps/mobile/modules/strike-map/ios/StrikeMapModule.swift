@@ -2,8 +2,34 @@ import ExpoModulesCore
 
 public class StrikeMapModule: Module {
   private let speech = NavigationSpeech()
+  private let carOwner = UUID()
   public func definition() -> ModuleDefinition {
     Name("StrikeMap")
+    Events("carPlayCommand", "carPlayActivity")
+    OnCreate {
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        CarPlayBridge.shared.attach(owner: self.carOwner) { [weak self] event, values in
+          self?.sendEvent(event, values)
+        }
+      }
+    }
+    OnDestroy {
+      let owner = self.carOwner
+      DispatchQueue.main.async { CarPlayBridge.shared.detach(owner: owner) }
+    }
+    AsyncFunction("beginCarPresentation") { () -> Int in
+      CarPlayBridge.shared.beginSession()
+    }.runOnQueue(.main)
+    AsyncFunction("publishCarPresentation") { (generation: Int, snapshot: CarPlaySnapshotRecord) in
+      CarPlayBridge.shared.publish(snapshot, generation: generation)
+    }.runOnQueue(.main)
+    AsyncFunction("endCarPresentation") { (generation: Int) in
+      CarPlayBridge.shared.endSession(generation: generation)
+    }.runOnQueue(.main)
+    AsyncFunction("carPlayIsActive") { () -> Bool in
+      CarPlayBridge.shared.active
+    }.runOnQueue(.main)
     AsyncFunction("speakInstruction") { (text: String, language: String) in
       try self.speech.speak(text, language: language)
     }.runOnQueue(.main)

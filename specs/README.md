@@ -10,6 +10,7 @@
 | Data source | [Data source](lightning/data-source.spec.md) | Single-adapter backend and OIDC approved |
 | Backend connection | [Connection](lightning/connection.spec.md) | Single-backend setup and session isolation |
 | Navigation | [Navigation](navigation/navigation.spec.md) | Optional driving navigation approved; background behavior open |
+| CarPlay | [Native CarPlay](navigation/carplay.spec.md) | Scene integration in progress; native evidence and entitlement pending |
 | Audit | [Audit](audit/audit.spec.md) | Generated |
 
 Consequential open questions require explicit product approval. Routine choices

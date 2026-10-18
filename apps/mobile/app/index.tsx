@@ -10,6 +10,7 @@ import { type MessageKey } from '@simple-strike/i18n';
 import { createDeviceTranslator } from '../src/i18n';
 import { loadMobileConfig } from '../src/config';
 import ConnectedHome from '../src/ConnectedHome';
+import CarPlaySetup from '../src/CarPlaySetup';
 
 const defaults = loadMobileConfig(Constants.expoConfig?.extra);
 const settingsKey = 'backend_connection_v1';
@@ -74,6 +75,7 @@ export default function Home() {
 
   if (connection) return <ConnectedHome key={connection.scope.key} config={connection.config} scope={connection.scope} onChangeServer={changeServer} />;
   return <SafeAreaView style={styles.container}>
+    <CarPlaySetup translator={i18n} />
     <Text style={styles.title} accessibilityRole="header">{i18n.t('app.title')}</Text>
     <Text>{i18n.t('connection.description')}</Text>
     <TextInput style={styles.input} accessibilityLabel={i18n.t('connection.address')} placeholder={i18n.t('connection.address')} value={address} onChangeText={setAddress} autoCapitalize="none" autoCorrect={false} keyboardType="url" editable={ready && !busy} />

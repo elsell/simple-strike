@@ -1,7 +1,7 @@
 import ExpoModulesCore
 import MapKit
 
-final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegate {
+final class StrikeMapView: ExpoView, MKMapViewDelegate {
   private let map = MKMapView()
   private var radius = 32186.88
   private var mapCenter = CLLocationCoordinate2D(latitude: 27.95, longitude: -82.46)
@@ -12,7 +12,11 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   let onExplore = EventDispatcher()
   let onLocation = EventDispatcher()
   let onLocationState = EventDispatcher()
-  private let locationManager = CLLocationManager()
+  var nativeLocation: (([String: Any]) -> Void)?
+  var nativeLocationState: ((String) -> Void)?
+  var nativeExplore: (([String: Any]) -> Void)?
+  private let locationID = UUID()
+  private var tracking = false
   private var locationEnabled = false
   private var explorationActive = false
 
@@ -20,8 +24,6 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     super.init(appContext: appContext)
     clipsToBounds = true
     map.delegate = self
-    locationManager.delegate = self
-    locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
     map.showsUserLocation = false
     addSubview(map)
     applyRegion()
@@ -29,8 +31,7 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
 
   func setLocationEnabled(_ enabled: Bool) {
     locationEnabled = enabled
-    if enabled { locationManager.requestWhenInUseAuthorization() }
-    locationManagerDidChangeAuthorization(locationManager)
+    updateLocationActivity()
   }
 
   override func didMoveToWindow() {
@@ -38,33 +39,44 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     updateLocationActivity()
   }
 
+  deinit { LocationSource.shared.remove(locationID) }
+
   private func updateLocationActivity() {
-    let tracking = locationEnabled && window != nil && (locationManager.authorizationStatus == .authorizedWhenInUse || locationManager.authorizationStatus == .authorizedAlways)
-    map.showsUserLocation = tracking
-    if tracking { locationManager.startUpdatingLocation() }
-    else { locationManager.stopUpdatingLocation() }
-  }
-
-  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-    let state: String
-    switch manager.authorizationStatus {
-    case .authorizedAlways, .authorizedWhenInUse: state = "authorized"
-    case .denied: state = "denied"
-    case .restricted: state = "restricted"
-    case .notDetermined: state = "undetermined"
-    @unknown default: state = "unavailable"
+    let shouldTrack = locationEnabled && window != nil
+    guard shouldTrack != tracking else { return }
+    tracking = shouldTrack
+    if tracking {
+      LocationSource.shared.observe(locationID, fix: { [weak self] value in
+        guard let self else { return }
+        if let callback = self.nativeLocation { callback(value) }
+        else { self.onLocation(value) }
+      }, state: { [weak self] state in
+        guard let self else { return }
+        self.map.showsUserLocation = state == "authorized"
+        if let callback = self.nativeLocationState { callback(state) }
+        else { self.onLocationState(["state": state]) }
+      })
+    } else {
+      map.showsUserLocation = false
+      LocationSource.shared.remove(locationID)
     }
-    onLocationState(["state": state])
-    updateLocationActivity()
   }
 
-  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-    guard let location = locations.last, location.horizontalAccuracy >= 0 else { return }
-    onLocation(["latitude": location.coordinate.latitude, "longitude": location.coordinate.longitude, "accuracyMeters": location.horizontalAccuracy, "timestampMs": location.timestamp.timeIntervalSince1970 * 1000])
+  func pan(horizontal: Double, vertical: Double) {
+    let visible = map.visibleMapRect
+    let current = MKMapPoint(map.centerCoordinate)
+    let point = MKMapPoint(x: current.x + visible.size.width * horizontal, y: current.y + visible.size.height * vertical)
+    let coordinate = point.coordinate
+    guard CLLocationCoordinate2DIsValid(coordinate) else { return }
+    mapCenter = coordinate
+    map.setCenter(coordinate, animated: false)
+    emitExplore()
   }
 
-  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-    onLocationState(["state": "unavailable"])
+  private func emitExplore() {
+    let value: [String: Any] = ["latitude": mapCenter.latitude, "longitude": mapCenter.longitude, "radiusMeters": radius]
+    if let callback = nativeExplore { callback(value) }
+    else { onExplore(value) }
   }
 
   override func layoutSubviews() {
@@ -177,7 +189,8 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     }
     if interacting {
       explorationActive = true
-      onExplore(["latitude": mapView.centerCoordinate.latitude, "longitude": mapView.centerCoordinate.longitude, "radiusMeters": radius])
+      mapCenter = mapView.centerCoordinate
+      emitExplore()
     }
   }
 
@@ -188,7 +201,7 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     let visible = mapView.visibleMapRect
     let visibleRadius = min(visible.size.width, visible.size.height) * MKMetersPerMapPointAtLatitude(mapCenter.latitude) / 2
     if visibleRadius.isFinite && visibleRadius > 0 { radius = visibleRadius }
-    onExplore(["latitude": mapCenter.latitude, "longitude": mapCenter.longitude, "radiusMeters": radius])
+    emitExplore()
   }
 }
 

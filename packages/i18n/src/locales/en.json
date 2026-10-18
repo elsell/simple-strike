@@ -70,5 +70,8 @@
   "navigation.offRoute": "Off route",
   "navigation.guiding": "Route guidance",
   "navigation.remaining": "{{distance}} mi remaining",
-  "navigation.retry": "Retry Route"
+  "navigation.retry": "Retry Route",
+  "carplay.phoneSignIn": "Set up your server and sign in on your phone.",
+  "carplay.failed": "The car display could not be updated. Reconnect CarPlay.",
+  "carplay.pan": "Pan"
 }
