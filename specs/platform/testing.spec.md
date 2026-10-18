@@ -417,6 +417,10 @@ fresh, task-owned simulator. The check must load the development bundle from a
 local Metro process, capture a screenshot, and verify the signed-out backend
 setup screen by recognized text. A living process or a splash screen alone must
 not pass. The screenshot and recognized text must be retained for inspection.
+The Metro readiness probe must use the IPv4 loopback address requested by the
+native development bundle loader. A successful IPv6 localhost probe alone must
+not establish readiness. The hosted test may bind Metro to all interfaces on
+its isolated CI runner to support both loopback address families.
 The check must clean up only its own simulator and Metro process. This smoke
 check does not establish CarPlay, authenticated map behavior, or route guidance.
 

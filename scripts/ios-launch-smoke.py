@@ -64,14 +64,16 @@ def main():
                'SIMPLE_STRIKE_API_URL': 'http://localhost:8080', 'SIMPLE_STRIKE_OIDC_ISSUER': 'http://localhost:5556/dex',
                'SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID': 'simple-strike-mobile'}
         with (output / 'metro.log').open('w') as log:
-            metro = subprocess.Popen(['node', 'node_modules/expo/bin/cli', 'start', '--dev-client', '--localhost', '--port', '8081'],
+            # Expo's localhost binding can select IPv6 only. The native bundle
+            # loader requests IPv4, so use the isolated runner's dual-stack bind.
+            metro = subprocess.Popen(['node', 'node_modules/expo/bin/cli', 'start', '--dev-client', '--lan', '--port', '8081'],
                                      cwd=root / 'apps/mobile', env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
             deadline = time.monotonic() + 90
             while True:
                 if metro.poll() is not None:
                     raise RuntimeError('Metro exited before readiness')
                 try:
-                    with urllib.request.urlopen('http://localhost:8081/status', timeout=2) as response:
+                    with urllib.request.urlopen('http://127.0.0.1:8081/status', timeout=2) as response:
                         if response.read().decode().strip() == 'packager-status:running':
                             break
                 except (OSError, ValueError):
@@ -82,7 +84,7 @@ def main():
             # Expo's simulator launcher accepts a project URL without a system open-URL dialog.
             pid = launch_pid(command('xcrun', 'simctl', 'launch', device, bundle,
                 '-AppleLanguages', '(en)', '-AppleLocale', 'en_US',
-                '--initialUrl', 'http://localhost:8081/?disableOnboarding=1'), bundle)
+                '--initialUrl', 'http://127.0.0.1:8081/?disableOnboarding=1'), bundle)
             deadline = time.monotonic() + 180
             while time.monotonic() < deadline:
                 os.kill(pid, 0)
