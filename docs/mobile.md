@@ -162,6 +162,9 @@ The downloaded build uses development endpoints. Do not publish it as a signed
 release. Continue with the map acceptance procedure; downloading or installing
 an artifact is not evidence that those scenarios passed.
 
+CI retains the unsigned simulator build before the launch check. A downloadable
+artifact therefore does not imply that startup or interaction checks passed.
+
 The iOS job also runs `python3 scripts/ios-launch-smoke.py` after building. It
 creates a fresh simulator, runs local Metro, and checks the visible backend setup
 screen. The `ios-launch-<revision>` artifact contains its screenshot, recognized

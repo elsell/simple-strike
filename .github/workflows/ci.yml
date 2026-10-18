@@ -269,21 +269,6 @@ jobs:
         name: Verify locked CocoaPods
         run: cd apps/mobile && test "$(bundle exec pod --version)" = "1.16.2"
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
-        name: Launch and inspect iOS setup screen
-        run: python3 scripts/test-ios-launch-smoke.py && python3 scripts/ios-launch-smoke.py
-      - if: always() && steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
-        name: Upload iOS launch evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ios-launch-${{ github.sha }}
-          path: |
-            .bin/ios-launch-smoke/*.png
-            .bin/ios-launch-smoke/*.json
-            .bin/ios-launch-smoke/*.log
-          include-hidden-files: true
-          if-no-files-found: warn
-          retention-days: 7
-      - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Package iOS simulator application
         run: |
           application="$(find .bin/ios-simulator/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' -type d -print -quit)"
@@ -301,6 +286,21 @@ jobs:
           path: .bin/ios-simulator-artifact.zip
           include-hidden-files: true
           if-no-files-found: error
+          retention-days: 7
+      - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
+        name: Launch and inspect iOS setup screen
+        run: python3 scripts/test-ios-launch-smoke.py && python3 scripts/ios-launch-smoke.py
+      - if: always() && steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
+        name: Upload iOS launch evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-launch-${{ github.sha }}
+          path: |
+            .bin/ios-launch-smoke/*.png
+            .bin/ios-launch-smoke/*.json
+            .bin/ios-launch-smoke/*.log
+          include-hidden-files: true
+          if-no-files-found: warn
           retention-days: 7
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native != 'true'
         name: Report skipped iOS native build
