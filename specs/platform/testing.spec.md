@@ -421,6 +421,9 @@ The Metro readiness probe must use the IPv4 loopback address requested by the
 native development bundle loader. A successful IPv6 localhost probe alone must
 not establish readiness. The hosted test may bind Metro to all interfaces on
 its isolated CI runner to support both loopback address families.
+Installation into a fresh hosted simulator may take up to three minutes. An
+installation timeout must fail the check, retain diagnostics, and must not count
+as successful application launch.
 The check must clean up only its own simulator and Metro process. This smoke
 check does not establish CarPlay, authenticated map behavior, or route guidance.
 

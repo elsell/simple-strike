@@ -59,7 +59,9 @@ def main():
         command('swiftc', str(root / 'scripts/recognize-ios-screenshot.swift'), '-o', str(output / 'recognize'), timeout=120)
         command('xcrun', 'simctl', 'boot', device)
         command('xcrun', 'simctl', 'bootstatus', device, '-b', timeout=240)
-        command('xcrun', 'simctl', 'install', device, str(app))
+        # Fresh hosted simulators can still be provisioning system services after
+        # bootstatus finishes. Allow installation time without relaxing UI checks.
+        command('xcrun', 'simctl', 'install', device, str(app), timeout=180)
         env = {**os.environ, 'CI': '1', 'EXPO_NO_TELEMETRY': '1', 'SIMPLE_STRIKE_APP_ENV': 'development',
                'SIMPLE_STRIKE_API_URL': 'http://localhost:8080', 'SIMPLE_STRIKE_OIDC_ISSUER': 'http://localhost:5556/dex',
                'SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID': 'simple-strike-mobile'}
