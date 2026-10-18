@@ -52,3 +52,14 @@ test('zoom changes the viewport without changing tracking and recenter preserves
   session.endRoute();
   assert.equal(session.snapshot().radiusMeters, 40 * 1609.344);
 });
+
+test('pinch radius becomes the baseline for zoom buttons and recenter', () => {
+  const session = new MapSession({ latitude: 27, longitude: -82 });
+  session.explore({ latitude: 28, longitude: -81 }, 8000);
+  session.zoomIn();
+  assert.equal(session.snapshot().radiusMeters, 4000);
+  session.recenter();
+  assert.equal(session.snapshot().radiusMeters, 4000);
+  session.explore({ latitude: 28, longitude: -81 }, NaN);
+  assert.equal(session.snapshot().radiusMeters, 4000);
+});

@@ -90,3 +90,6 @@ Acceptance: a strike received at age 290 seconds remains visible after a network
 failure, then disappears at age 300 seconds without a successful network read.
 A duplicate received after reconnect creates one marker. An access rejection
 clears the cache immediately.
+
+After a pinch gesture, zoom buttons must scale the visible map radius. Recenter
+must preserve that radius instead of restoring the radius before the gesture.

@@ -23,7 +23,10 @@ export class MapSession {
     if (this.following) this.center = { ...position };
   }
 
-  explore(center: MapPosition): void {
+  explore(center: MapPosition, radiusMeters?: number): void {
+    if (radiusMeters !== undefined && Number.isFinite(radiusMeters) && radiusMeters > 0) {
+      this.radiusMeters = radiusMeters;
+    }
     this.following = false;
     this.center = { ...center };
   }

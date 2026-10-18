@@ -2,7 +2,7 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import type { MapSnapshot } from '@simple-strike/client-core';
 import type { Translator } from '@simple-strike/i18n';
 import type { RecentSnapshot } from '@simple-strike/client-core';
-import StrikeMap, { type MapCoordinate, type MapRing } from '../modules/strike-map';
+import StrikeMap, { type MapCoordinate, type MapViewport, type MapRing } from '../modules/strike-map';
 
 export type DrivingMapProps = {
   map: MapSnapshot;
@@ -15,7 +15,7 @@ export type DrivingMapProps = {
   locationEnabled: boolean;
   onLocation(position: MapCoordinate): void;
   onLocationState(state: string): void;
-  onExplore(position: MapCoordinate): void;
+  onExplore(position: MapViewport): void;
   onRecenter(): void;
   onZoomIn(): void;
   onZoomOut(): void;

@@ -156,7 +156,7 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     }
     if interacting {
       explorationActive = true
-      onExplore(["latitude": mapView.centerCoordinate.latitude, "longitude": mapView.centerCoordinate.longitude])
+      onExplore(["latitude": mapView.centerCoordinate.latitude, "longitude": mapView.centerCoordinate.longitude, "radiusMeters": radius])
     }
   }
 
@@ -164,7 +164,10 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
     guard explorationActive else { return }
     explorationActive = false
     mapCenter = mapView.centerCoordinate
-    onExplore(["latitude": mapCenter.latitude, "longitude": mapCenter.longitude])
+    let visible = mapView.visibleMapRect
+    let visibleRadius = min(visible.size.width, visible.size.height) * MKMetersPerMapPointAtLatitude(mapCenter.latitude) / 2
+    if visibleRadius.isFinite && visibleRadius > 0 { radius = visibleRadius }
+    onExplore(["latitude": mapCenter.latitude, "longitude": mapCenter.longitude, "radiusMeters": radius])
   }
 }
 

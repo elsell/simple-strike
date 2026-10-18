@@ -97,7 +97,7 @@ export default function LightningScreen(props: LightningScreenProps) {
     locationEnabled={active} vehicleAvailable={vehicleAvailable} locationState={locationState} closestText={closestText}
     onLocation={position => { map.updatePosition(position); setVehicleAvailable(true); setLocationState('authorized'); redraw(value => value + 1); }}
     onLocationState={state => { setLocationState(state); if (state !== 'authorized') setVehicleAvailable(false); }}
-    onExplore={position => { map.explore(position); redraw(value => value + 1); }}
+    onExplore={position => { map.explore(position, position.radiusMeters); redraw(value => value + 1); }}
     onRecenter={() => { map.recenter(); redraw(value => value + 1); }}
     onZoomIn={() => { map.zoomIn(); redraw(value => value + 1); }}
     onZoomOut={() => { map.zoomOut(); redraw(value => value + 1); }} />;
