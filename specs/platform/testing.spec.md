@@ -306,12 +306,21 @@ clean package audit, the age gate, workspace tests and builds, native compatibil
 validation, and native compilation before merge.
 
 The upstream advisories list no patched release for
-[node-forge](https://github.com/advisories/GHSA-86w9-cpqp-85rv),
-[braces](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), or
-[sprintf-js](https://github.com/advisories/GHSA-hp3w-g68c-fv3c), as checked on
-2026-10-17. Their findings remain unresolved.
-Do not invent package versions or suppress the audit. Resolve them with a verified
-upstream release or a separately reviewed backport before the merge gate passes.
+[node-forge](https://github.com/advisories/GHSA-86w9-cpqp-85rv) or
+[braces](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), as checked on
+2026-10-18. Their findings remain unresolved pending verified remediation.
+Do not invent package versions or silently suppress the audit. Resolve active
+findings with a verified upstream release or a separately reviewed backport before
+the merge gate passes.
+
+The CVE authority rejected `CVE-2026-97058` for `sprintf-js` on 2026-10-12.
+The [immutable CVE record](https://github.com/CVEProject/cvelistV5/blob/c3f6773766e2cf1dc050bfff2d59b236c86bb687/cves/2026/97xxx/CVE-2026-97058.json)
+records state `REJECTED` and the authority's rejection reason. On 2026-10-18,
+GitHub still reported `GHSA-hp3w-g68c-fv3c` with a null `withdrawn_at`, so the
+raw package audit still fails on it. Treat this as a feed discrepancy, not an
+unresolved vulnerability or a reason to change numeric formatting semantics.
+No audit exclusion is currently configured. Any future treatment must identify
+the exact advisory and preserve the raw scan result and rejection evidence.
 
 The decode-uri-component 0.5.0 security release is available. Its reviewed patch
 must change only module packaging so existing CommonJS query-string consumers
