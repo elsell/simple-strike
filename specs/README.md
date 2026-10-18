@@ -5,6 +5,7 @@
 | Public bootstrap | [Bootstrap](platform/bootstrap.spec.md) | Required now |
 | Platform boundaries | [Architecture](platform/architecture.spec.md) | Generated |
 | Verification | [Testing](platform/testing.spec.md) | Generated |
+| Public demo deployment | [Demo deployment](platform/demo-deployment.spec.md) | Flux target and public demo hostname approved; rollout pending |
 | Delivery | [Roadmap](platform/roadmap.spec.md) | Navigation in progress; map and connection awaiting verification |
 | Lightning map | [Map](lightning/map.spec.md) | Core behavior approved; edge cases open |
 | Data source | [Data source](lightning/data-source.spec.md) | Single-adapter backend and OIDC approved |
