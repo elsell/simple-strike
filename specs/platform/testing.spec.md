@@ -23,7 +23,7 @@ after bootstrap without manual source edits.
 Mobile verification names its evidence precisely. Fast checks run Expo Doctor,
 Expo dependency compatibility, JavaScript bundle export, configuration/identifier
 validation, and clean iOS/Android prebuild. Linux CI compiles an unsigned Android
-debug application with Gradle. A macOS main/release/manual job compiles an unsigned
+debug application with Gradle. A macOS main/release/manual job compiles an ad hoc signed
 iOS simulator application with Xcode. Export success alone is never reported as
 a native build. Session-state tests prove that transient network, 429, and 5xx
 failures preserve a locally valid credential, while expiry, explicit 401, and
@@ -405,7 +405,7 @@ not waive native acceptance, image review, or any other merge requirement.
 
 ### Native demo verification artifact
 
-An affected successful hosted iOS build must publish its unsigned simulator app
+An affected successful hosted iOS build must publish its ad hoc signed simulator app
 and mechanically derived Git revision as a short-lived CI artifact. The archive
 must preserve the application bundle structure. It must not include signing
 material, build caches, or backend credentials. This development build requires
@@ -417,6 +417,9 @@ fresh, task-owned simulator. The check must load the development bundle from a
 local Metro process, capture a screenshot, and verify the signed-out backend
 setup screen by recognized text. A living process or a splash screen alone must
 not pass. The screenshot and recognized text must be retained for inspection.
+The simulator build must retain Xcode's application identity for Keychain access.
+It must not require a developer certificate or provisioning profile. A fresh
+installation showing a connection-storage error must fail the startup check.
 The Metro readiness probe must use the IPv4 loopback address requested by the
 native development bundle loader. A successful IPv6 localhost probe alone must
 not establish readiness. The hosted test may bind Metro to all interfaces on

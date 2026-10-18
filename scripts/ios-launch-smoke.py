@@ -14,7 +14,8 @@ import uuid
 
 def setup_visible(lines):
     text = ' '.join(lines).casefold()
-    return all(label in text for label in ('simple strike', 'backend url', 'connect'))
+    return (all(label in text for label in ('simple strike', 'backend url', 'connect'))
+            and 'cannot read or save the connection' not in text)
 
 
 def launch_pid(output, bundle):

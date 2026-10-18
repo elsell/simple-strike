@@ -17,6 +17,10 @@ class LaunchEvidenceTests(unittest.TestCase):
         for value in ['another.app: 1234', 'com.elsell.simplestrike: 0', 'warning: 1234']:
             with self.assertRaises(ValueError): smoke.launch_pid(value, 'com.elsell.simplestrike')
 
+    def test_storage_failure_is_not_successful_setup(self):
+        self.assertFalse(smoke.setup_visible(['Simple Strike', 'Backend URL',
+            'Cannot read or save the connection. Try again.', 'Connect']))
+
     def test_selects_an_available_iphone_runtime(self):
         devices = {'devices': {
             'com.apple.CoreSimulator.SimRuntime.iOS-26-0': [{'name':'iPhone 17','isAvailable':True,'deviceTypeIdentifier':'phone'}],

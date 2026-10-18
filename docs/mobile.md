@@ -6,8 +6,8 @@ development client, and a signed store build.
 
 ## First development build
 
-Run `make dev`, then create and launch an unsigned development client in another
-terminal:
+Run `make dev`, then create and launch a development client in another
+terminal. Simulator builds use ad hoc signing without developer credentials:
 
 ```sh
 make mobile-dev-ios      # macOS with Xcode
@@ -70,7 +70,7 @@ make mobile-validate       # Expo Doctor, dependency compatibility, config ident
 make mobile-export         # iOS and Android Metro/Expo bundles only
 make mobile-prebuild       # clean generated iOS and Android native projects
 make mobile-build-android  # unsigned Android debug APK through Gradle
-make mobile-build-ios      # unsigned iOS simulator app through Xcode
+make mobile-build-ios      # ad hoc signed iOS simulator app through Xcode
 ```
 
 Bundle export is useful but is not a native build. Generated CI compiles Android
@@ -162,7 +162,7 @@ The downloaded build uses development endpoints. Do not publish it as a signed
 release. Continue with the map acceptance procedure; downloading or installing
 an artifact is not evidence that those scenarios passed.
 
-CI retains the unsigned simulator build before the launch check. A downloadable
+CI retains the ad hoc signed simulator build before the launch check. A downloadable
 artifact therefore does not imply that startup or interaction checks passed.
 
 The iOS job also runs `python3 scripts/ios-launch-smoke.py` after building. It
