@@ -10,8 +10,10 @@ name = 'SimpleStrikeAcceptance'
 abort 'Acceptance target already exists' if project.targets.any? { |target| target.name == name }
 target = project.new_target(:ui_test_bundle, name, :ios, '15.1')
 target.add_dependency(app)
-reference = project.main_group.new_file(File.join(root, 'scripts/ios-ui-tests/ConnectionTests.swift'))
-target.source_build_phase.add_file_reference(reference)
+%w[ConnectionTests DemoTests].each do |source|
+  reference = project.main_group.new_file(File.join(root, "scripts/ios-ui-tests/#{source}.swift"))
+  target.source_build_phase.add_file_reference(reference)
+end
 target.build_configurations.each do |configuration|
   configuration.build_settings.merge!({
     'PRODUCT_NAME' => name,

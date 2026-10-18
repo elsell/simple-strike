@@ -463,3 +463,12 @@ setup form without a storage error. These scenarios do not prove successful
 OIDC sign-in, map behavior, background navigation, or CarPlay interaction.
 The public demo endpoint is `https://demo.simplestrike.online`; authenticated
 scenarios require its verified deployment or an equivalent controlled full stack.
+
+A manually selected demo scenario must use the published HTTPS demo backend and
+its real OIDC browser flow. It must not inject sessions or replace network
+responses. It must assert the simulated-data label, native map, follow-me state,
+pan and recenter, retained sign-in after relaunch, and sign-out after relaunch.
+It must retain screenshots and record the selected scenario in the artifact.
+An unavailable demo must fail this scenario, not skip it. Ordinary setup-only CI
+must exclude it explicitly. Passing this scenario does not prove route guidance,
+ring animation quality, locked-screen behavior, or CarPlay interaction.

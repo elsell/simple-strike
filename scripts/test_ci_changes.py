@@ -118,7 +118,12 @@ class WorkflowRoutingGuardTest(unittest.TestCase):
             "  push:\n"
             "    branches: [main]\n"
             "  pull_request:\n"
-            "  workflow_dispatch:\n",
+            "  workflow_dispatch:\n"
+            "    inputs:\n"
+            "      native_demo:\n"
+            "        description: Require public demo OIDC and native map acceptance\n"
+            "        type: boolean\n"
+            "        default: false\n",
         )
 
     def _job_body(self, job: str) -> str:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run real app interaction tests on an owned hosted simulator."""
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -8,6 +9,10 @@ import uuid
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--demo', action='store_true', help='Require real public demo sign-in and map acceptance')
+    args = parser.parse_args()
+    scenario = 'DemoTests' if args.demo else 'ConnectionTests'
     root = Path(__file__).resolve().parent.parent
     spec = importlib.util.spec_from_file_location('launch', root / 'scripts/ios-launch-smoke.py')
     launch = importlib.util.module_from_spec(spec)
@@ -17,15 +22,19 @@ def main():
     output = root / '.bin/ios-ui-tests'
     output.mkdir(parents=True, exist_ok=True)
     (output / 'revision.txt').write_text(launch.command('git', '-C', str(root), 'rev-parse', 'HEAD') + '\n')
+    (output / 'scenario.txt').write_text(scenario + '\n')
     try:
         launch.command('xcrun', 'simctl', 'boot', device)
         launch.command('xcrun', 'simctl', 'bootstatus', device, '-b', timeout=240)
+        if args.demo:
+            launch.command('xcrun', 'simctl', 'location', device, 'set', '27.95,-82.46')
         workspaces = list((root / 'apps/mobile/ios').glob('*.xcworkspace'))
         if len(workspaces) != 1:
             raise ValueError('Expected one application workspace')
         subprocess.run(['xcodebuild', '-workspace', str(workspaces[0]), '-scheme', 'SimpleStrikeAcceptance',
             '-configuration', 'Release', '-destination', f'platform=iOS Simulator,id={device}',
             '-derivedDataPath', str(root / '.bin/ios-simulator'), '-resultBundlePath', str(output / 'results.xcresult'),
+            '-only-testing:SimpleStrikeAcceptance/' + scenario,
             '-parallel-testing-enabled', 'NO', 'CODE_SIGN_IDENTITY=-', 'CODE_SIGNING_ALLOWED=YES', 'test'],
             check=True, timeout=900)
     finally:

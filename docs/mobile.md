@@ -242,3 +242,12 @@ feedback, and relaunch. Download the `ios-interaction` artifact and open its
 includes the tested revision. These initial checks do not establish authenticated
 map, route, background speech, or CarPlay behavior. Expand the same suite against
 the reachable demo stack before claiming those workflows pass.
+
+To require the real demo flow, dispatch CI with `native_demo=true` after the
+public demo is healthy. This selects `DemoTests` instead of `ConnectionTests`.
+The simulator uses a fixed test location in Tampa. The test signs in through Dex
+with the published demo credentials, checks the native map and follow-me controls,
+pans and recenters, relaunches, and signs out. It fails if the server or login is
+unavailable. The artifact's `scenario.txt` identifies the selected suite.
+This scenario has not yet been executed against the public deployment. Do not
+report authenticated native acceptance from a setup-only run.
