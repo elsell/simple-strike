@@ -344,3 +344,27 @@ regression check must reject the published malformed-signature vector, accept
 valid signatures, and reject altered messages. Final review remains required.
 The audit finding remains open until the backport is reviewed and its treatment
 in the security gate is explicitly documented. It must not be silently excluded.
+
+### Reviewed JavaScript audit findings
+
+The security gate must retain the unmodified package-audit JSON in
+`.bin/pnpm-audit.json` and print each reviewed finding. It may classify only these
+exact findings separately from unresolved vulnerabilities:
+
+- `GHSA-hp3w-g68c-fv3c`, package `sprintf-js`, versions 1.0.3 or 1.1.3: rejected
+  CVE, with the immutable authority record linked above.
+- `GHSA-86w9-cpqp-85rv`, package `node-forge`, version 1.4.0: reviewed upstream
+  backport. The patch SHA-256 must equal
+  `2798686e4488058ad81c3b8e32eb763c0feff21f4c717ce4d13b6ef2432cd5b8`, every locked
+  consumer must select that patch, and the installed-consumer regression must pass.
+
+A read-only review on 2026-10-18 confirmed the RSA patch matches the upstream
+executable change, independently verified the public malicious-signature fixture,
+and checked all six lockfile consumer references. The installed Expo consumer
+regression also passed. Older unused package-store entries are not proof of active
+resolution; frozen installs and the actual consumer resolver remain authoritative.
+
+The gate must reject malformed audit output, audit execution failures, altered or
+missing backport evidence, mismatched versions or package names, and all other
+advisories. In particular, the active `braces` finding must continue to fail the
+gate. This is not a general advisory allowlist or an exception for unpatched risk.
