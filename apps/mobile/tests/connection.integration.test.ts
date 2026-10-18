@@ -89,11 +89,11 @@ test('failed secure-storage disposal keeps the retired account closed', async ()
   const { replaceSessionScope } = await import('../src/session-disposal');
   const scope = new SessionScope('backend', {
     read: async () => 'old-session',
-    write: async () => { throw new Error('must not write'); },
-    remove: async () => { throw new Error('storage unavailable'); },
+    write: async () => { throw new Error('unexpected_write'); },
+    remove: async () => { throw new Error('storage_unavailable'); },
   });
   let prepared = false;
-  await assert.rejects(replaceSessionScope(scope, async () => { prepared = true; }), /storage unavailable/);
+  await assert.rejects(replaceSessionScope(scope, async () => { prepared = true; }), /storage_unavailable/);
   assert.equal(scope.active, false);
   assert.equal(prepared, false);
   assert.equal(await scope.read(), null);

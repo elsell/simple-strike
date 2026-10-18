@@ -45,12 +45,19 @@ final class CarPlaySearch: NSObject, CPSearchTemplateDelegate {
           item.userInfo = place
           return item
         }
-        self.finish(items)
+        self.finish(items.isEmpty ? self.message("noResults") : items)
       } catch {
         guard let self, candidate == self.generation else { return }
-        self.finish([])
+        self.finish(self.message("searchFailed"))
       }
     }
+  }
+
+  private func message(_ key: String) -> [CPListItem] {
+    guard let text = bridge.snapshot.labels[key] else { return [] }
+    let item = CPListItem(text: text, detailText: nil)
+    item.isEnabled = false
+    return [item]
   }
 
   private func finish(_ items: [CPListItem]) {

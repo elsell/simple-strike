@@ -42,6 +42,7 @@ export function useDrivingNavigation(translator: Translator, active: boolean) {
   }
   async function select(place: Place) {
     if (!enabled.current) return;
+    setStartFailed(false);
     const work = planner.select(place, usableNavigationFix(location.current, Date.now()) ? location.current : null); setPreview(planner.snapshot());
     await work; if (mounted.current) setPreview(planner.snapshot());
   }

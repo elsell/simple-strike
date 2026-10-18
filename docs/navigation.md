@@ -43,7 +43,10 @@ check the generated configuration and reject an unexpected startup template.
 These are configuration checks, not native lifecycle tests.
 
 CarPlay now has destination search, trip preview, and maneuver template code.
-Search calls the shared MapKit adapter. Destination selection and route commands
+Search calls the shared MapKit adapter. Empty results and search failures have
+distinct localized messages. Route or start failures show a native alert; failed
+rerouting exposes Retry Route beside End Route. These controls still require
+native interaction verification. Destination selection and route commands
 enter the phone's application controllers. Trip time estimates decrease in
 proportion to the remaining route distance. They are estimates, not traffic updates.
 The latest scene and startup code still needs a clean Xcode build and native

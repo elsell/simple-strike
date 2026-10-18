@@ -97,6 +97,8 @@ struct CarPlaySnapshotRecord: Record {
   @Field var routeSummary: String = ""
   @Field var maneuverDistanceMeters: Double = 0
   @Field var instructionId: String = ""
+  @Field var navigationError: String = ""
+  @Field var navigationRetry: Bool = false
   @Field var guidanceStatus: String = ""
   @Field var guidancePhase: String = "idle"
   @Field var destinationName: String = ""

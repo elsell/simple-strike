@@ -9,6 +9,8 @@ import type { LightningScreenProps } from './LightningScreen';
 import { observeCarActivity, observeCarCommands, type CarCommand } from '../modules/strike-map/carplay';
 import { useCarPresentation } from './useCarPresentation.ios';
 
+import { carNavigationFeedback } from './car-navigation-feedback';
+
 const clock = { now: () => Date.now() };
 
 export default function LightningScreen(props: LightningScreenProps) {
@@ -117,6 +119,7 @@ export default function LightningScreen(props: LightningScreenProps) {
       case 'search': void navigation.search(command.values.query, viewport.center); break;
       case 'select': void navigation.select(command.values); break;
       case 'startRoute': if (navigation.start()) map.recenter(); break;
+      case 'retryRoute': navigation.retry(); break;
       case 'endRoute': navigation.end(); map.endRoute(); break;
     }
     redraw(value => value + 1);
@@ -127,13 +130,15 @@ export default function LightningScreen(props: LightningScreenProps) {
   }, []);
   const route = navigation.session.route ?? navigation.preview.route;
   const progress = navigation.session.progress;
+  const feedback = carNavigationFeedback(navigation.startFailed, navigation.preview.error, navigation.session.error);
   const carFailed = useCarPresentation({
     authorized: snapshot.connection !== 'denied',
     labels: { phoneSignIn: t.t('carplay.phoneSignIn'), navigate: t.t('navigation.navigate'), start: t.t('navigation.start'), end: t.t('navigation.end'),
       close: t.t('common.close'), pan: t.t('carplay.pan'), source: t.t(snapshot.mode === null ? 'map.loadingFeed' : snapshot.mode === 'demo' ? 'map.demo' : 'map.live'),
-      estimatedThunder: t.t('map.estimatedThunder'), },
+      estimatedThunder: t.t('map.estimatedThunder'), retry: t.t('navigation.retry'), searchFailed: t.t('navigation.searchFailed'), noResults: t.t('navigation.noResults'), },
     vehicleAvailable, vehicle: viewport.vehicle, center: viewport.center, radiusMeters: viewport.radiusMeters,
     strikes: snapshot.strikes.map(strike => ({ id: strike.id, ...strike.position })), rings, route: route?.coordinates ?? [],
+    navigationError: feedback.key ? t.t(feedback.key) : '', navigationRetry: feedback.retry,
     guidancePhase: navigation.session.phase,
     routeId: route?.id ?? '',
     routeSummary: route ? t.t('navigation.summary', { distance: t.number(route.distanceMeters / 1609.344, { maximumFractionDigits: 1 }), minutes: t.number(Math.ceil(route.expectedTravelSeconds / 60)) }) : '',

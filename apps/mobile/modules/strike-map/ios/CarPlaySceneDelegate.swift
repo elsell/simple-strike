@@ -17,6 +17,9 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
   private var guidance: CarPlayGuidance?
   private var lastGuidancePhase = ""
   private var lastRouteID = ""
+  private var lastRetry = false
+  private var lastError = ""
+  private var errorAlert: CPAlertTemplate?
 
   public func templateApplicationScene(_ scene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController, to window: CPWindow) {
     bridge.startRuntime?()
@@ -60,6 +63,9 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
     controller = nil
     map = nil
     mapTemplate = nil
+    errorAlert = nil
+    lastError = ""
+    lastRetry = false
     authorized = nil
     lastLabels = [:]
     lastGuidancePhase = ""
@@ -69,7 +75,7 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
   public func sceneDidBecomeActive(_ scene: UIScene) {
     sceneActive = true
     bridge.setActive(true)
-    map?.setLocationEnabled(bridge.snapshot.authorized)
+    render(bridge.snapshot)
   }
 
   public func sceneWillResignActive(_ scene: UIScene) {
@@ -103,7 +109,11 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
     }
     template.leadingNavigationBarButtons = buttons
     if !snapshot.routeId.isEmpty, let end = snapshot.labels["end"] {
-      template.trailingNavigationBarButtons = [CPBarButton(title: end) { [weak self] _ in self?.bridge.command("endRoute") }]
+      var actions = [CPBarButton(title: end) { [weak self] _ in self?.bridge.command("endRoute") }]
+      if snapshot.navigationRetry, let retry = snapshot.labels["retry"] {
+        actions.append(CPBarButton(title: retry) { [weak self] _ in self?.bridge.command("retryRoute") })
+      }
+      template.trailingNavigationBarButtons = actions
     } else if let navigate = snapshot.labels["navigate"] {
       template.trailingNavigationBarButtons = [CPBarButton(title: navigate) { [weak self] _ in self?.showSearch() }]
     }
@@ -134,6 +144,30 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
     controller?.pushTemplate(status, animated: true) { _, _ in }
   }
 
+  private func renderError(_ snapshot: CarPlaySnapshotRecord) {
+    guard let controller else { return }
+    if !snapshot.authorized || snapshot.navigationError.isEmpty {
+      lastError = ""
+      if let alert = errorAlert, controller.presentedTemplate === alert {
+        controller.dismissTemplate(animated: false) { _, _ in }
+      }
+      errorAlert = nil
+      return
+    }
+    guard sceneActive, snapshot.navigationError != lastError,
+          controller.presentedTemplate == nil, let close = snapshot.labels["close"] else { return }
+    lastError = snapshot.navigationError
+    let action = CPAlertAction(title: close, style: .cancel) { [weak self, weak controller] _ in
+      controller?.dismissTemplate(animated: true) { _, _ in }
+      self?.errorAlert = nil
+    }
+    let alert = CPAlertTemplate(titleVariants: [snapshot.navigationError], actions: [action])
+    errorAlert = alert
+    controller.presentTemplate(alert, animated: true) { [weak self, weak alert] success, _ in
+      if !success, self?.errorAlert === alert { self?.errorAlert = nil }
+    }
+  }
+
   private func render(_ snapshot: CarPlaySnapshotRecord) {
     guard let controller, let map, let mapTemplate else { return }
     map.setLocationEnabled(sceneActive && snapshot.authorized)
@@ -143,13 +177,15 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
     map.updateCenter(snapshot.center)
     map.updateRadius(snapshot.radiusMeters)
     guidance?.render(snapshot)
+    renderError(snapshot)
     for button in mapTemplate.mapButtons { button.isEnabled = snapshot.authorized }
     let authorizationChanged = authorized != snapshot.authorized
-    guard authorizationChanged || lastLabels != snapshot.labels || lastGuidancePhase != snapshot.guidancePhase || lastRouteID != snapshot.routeId else { return }
+    guard authorizationChanged || lastLabels != snapshot.labels || lastGuidancePhase != snapshot.guidancePhase || lastRouteID != snapshot.routeId || lastRetry != snapshot.navigationRetry else { return }
     authorized = snapshot.authorized
     lastLabels = snapshot.labels
     lastGuidancePhase = snapshot.guidancePhase
     lastRouteID = snapshot.routeId
+    lastRetry = snapshot.navigationRetry
     updateBarButtons(snapshot)
     if snapshot.authorized {
       if authorizationChanged { controller.setRootTemplate(mapTemplate, animated: false) { _, _ in } }

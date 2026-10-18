@@ -17,6 +17,8 @@ export type CarSnapshot = {
   maneuverDistanceMeters: number;
   instructionId: string;
   guidanceStatus: string;
+  navigationError: string;
+  navigationRetry: boolean;
   guidancePhase: string;
   destinationName: string;
   instruction: string;
@@ -26,7 +28,7 @@ export type CarSnapshot = {
   closestText: string;
 };
 export type CarCommand =
-  | { name: 'zoomIn' | 'zoomOut' | 'recenter' | 'startRoute' | 'endRoute'; values: Record<string, never> }
+  | { name: 'zoomIn' | 'zoomOut' | 'recenter' | 'startRoute' | 'endRoute' | 'retryRoute'; values: Record<string, never> }
   | { name: 'search'; values: { query: string } }
   | { name: 'select'; values: Place }
   | { name: 'pan'; values: MapViewport }

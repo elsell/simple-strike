@@ -21,6 +21,10 @@ The navigation entitlement and Apple's approval remain external requirements.
   template's pending search independently, but selecting a result must enter the
   shared route planner. It must finish each search callback once, discard replaced
   results, and cancel pending work on sign-out or scene disconnection.
+- Search failures and empty results must have distinct localized feedback. Route
+  calculation or start failures must be visible on the car display. A failed
+  reroute must offer Retry Route through the shared guidance controller. Repeated
+  presentation snapshots must not repeatedly open the same error message.
 - Trip previews and maneuver cards must use the shared route geometry and
   progress. Remaining time may use the original route estimate scaled by the
   remaining distance. It must not be presented as a refreshed traffic estimate.

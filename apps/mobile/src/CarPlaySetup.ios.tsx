@@ -6,7 +6,7 @@ export default function CarPlaySetup({ translator }: { translator: Translator })
     authorized: false, labels: { phoneSignIn: translator.t('carplay.phoneSignIn') },
     vehicleAvailable: false, vehicle: { latitude: 0, longitude: 0 }, center: { latitude: 0, longitude: 0 },
     radiusMeters: 32186.88, strikes: [], rings: [], route: [], guidancePhase: 'idle', destinationName: '',
-    routeId: '', routeSummary: '', maneuverDistanceMeters: 0, instructionId: '', guidanceStatus: '',
+    routeId: '', routeSummary: '', maneuverDistanceMeters: 0, instructionId: '', guidanceStatus: '', navigationError: '', navigationRetry: false,
     instruction: '', distanceRemainingMeters: 0, expectedTravelSeconds: 0, sourceMode: '', closestText: '',
   });
   return null;

@@ -58,6 +58,7 @@
   "navigation.navigate": "Navegar",
   "navigation.destination": "Dirección o lugar",
   "navigation.search": "Buscar",
+  "navigation.searchFailed": "No se pudieron buscar lugares. Inténtalo de nuevo.",
   "navigation.noResults": "No se encontraron lugares. Prueba otra búsqueda.",
   "navigation.failed": "No se pudo encontrar una ruta. Inténtalo de nuevo.",
   "navigation.locationRequired": "Se necesita una ubicación actual y precisa para las indicaciones.",
