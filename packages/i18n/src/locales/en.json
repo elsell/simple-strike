@@ -33,5 +33,18 @@
   "map.zoomIn": "Zoom in",
   "map.zoomOut": "Zoom out",
   "map.recenter": "Recenter",
-  "map.locationPermission": "Use your location to center the map and provide route guidance."
+  "map.locationPermission": "Use your location to center the map and provide route guidance.",
+  "map.loadingFeed": "Connecting to lightning data…",
+  "map.disconnected": "Disconnected. Showing recent strikes.",
+  "map.accessDenied": "This account cannot access the lightning feed.",
+  "map.locating": "Waiting for your location",
+  "map.locationUnavailable": "Location unavailable. You can browse the map.",
+  "map.closest": "Closest strike: {{distance}} mi · {{age}}",
+  "map.noNearby": "No received strikes within 50 miles in the last five minutes.",
+  "map.estimatedThunder": "Rings show estimated thunder travel.",
+  "map.iosOnly": "The native map is available on iOS.",
+  "map.secondsAgo_other": "{{count}} seconds ago",
+  "map.secondsAgo_one": "{{count}} second ago",
+  "map.minutesAgo_other": "{{count}} minutes ago",
+  "map.minutesAgo_one": "{{count}} minute ago"
 }

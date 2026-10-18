@@ -210,3 +210,14 @@ result = check({ 'apps/mobile/modules/strike-map/network.ts': "fetch('/v1/lightn
 assert.notEqual(result.status, 0, 'Native module wrappers must not bypass the API client');
 
 console.log('client API boundary rejects alternate transports and allows only exact provider adapters');
+
+const animationAndCancellation = check({
+  'apps/mobile/src/animation.ts': 'const controller = new AbortController(); const frame = requestAnimationFrame(() => controller.abort()); cancelAnimationFrame(frame);',
+});
+assert.equal(animationAndCancellation.status, 0, animationAndCancellation.stderr);
+
+const platformModule = check({
+  'apps/mobile/src/Screen.ios.tsx': "import { value } from './Map.ios'; void value;",
+  'apps/mobile/src/Map.ios.tsx': 'export const value = 1;',
+});
+assert.equal(platformModule.status, 0, platformModule.stderr);

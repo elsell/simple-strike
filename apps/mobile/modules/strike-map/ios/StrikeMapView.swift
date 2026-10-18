@@ -28,7 +28,7 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   func setLocationEnabled(_ enabled: Bool) {
     locationEnabled = enabled
     if enabled { locationManager.requestWhenInUseAuthorization() }
-    updateLocationActivity()
+    locationManagerDidChangeAuthorization(locationManager)
   }
 
   override func didMoveToWindow() {
@@ -146,7 +146,14 @@ final class StrikeMapView: ExpoView, MKMapViewDelegate, CLLocationManagerDelegat
   }
 
   func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-    let interacting = mapView.subviews.flatMap { $0.gestureRecognizers ?? [] }.contains { $0.state == .began || $0.state == .changed }
+    var interacting = false
+    for subview in mapView.subviews {
+      for recognizer in subview.gestureRecognizers ?? [] {
+        if recognizer.state == .began || recognizer.state == .changed {
+          interacting = true
+        }
+      }
+    }
     if interacting {
       explorationActive = true
       onExplore(["latitude": mapView.centerCoordinate.latitude, "longitude": mapView.centerCoordinate.longitude])

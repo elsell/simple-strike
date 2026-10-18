@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LightningFeed, type FeedSnapshot, type FeedSource } from './lightning-feed.js';
+import { LightningFeed, readLightningWithSession, type FeedSnapshot, type FeedSource } from './lightning-feed.js';
 
 class PendingSource implements FeedSource {
   requests: { signal: AbortSignal; resolve(value: FeedSnapshot): void; reject(error: unknown): void }[] = [];
@@ -11,6 +11,23 @@ class PendingSource implements FeedSource {
 const snapshot: FeedSnapshot = {
   mode: 'demo', strikes: [{ id: 'demo-1', position: { latitude: 27, longitude: -82 }, occurredAtMs: 1000 }],
 };
+
+test('a rejected superseded credential cannot invalidate the replacement session', async () => {
+  const source = new PendingSource();
+  let token = 'old';
+  const request = readLightningWithSession((used, signal) => {
+    assert.equal(used, 'old');
+    return source.read(signal);
+  }, () => token, new AbortController().signal);
+  token = 'replacement';
+  source.requests[0].reject({ kind: 'http', status: 401 });
+  await assert.rejects(request, error => (error as { kind: string }).kind === 'network');
+});
+
+test('a rejected current credential retains its unauthorized classification', async () => {
+  const failure = { kind: 'http', status: 401 };
+  await assert.rejects(readLightningWithSession(async () => { throw failure; }, () => 'current', new AbortController().signal), error => error === failure);
+});
 
 test('refresh coalesces concurrent reads and permits a new read after completion', async () => {
   const source = new PendingSource();

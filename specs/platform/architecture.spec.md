@@ -338,3 +338,15 @@ Shared client packages exported as TypeScript source must use bundler-compatible
 module resolution. Their runtime imports must resolve in Metro and the web
 bundler without generated JavaScript files. Type checks alone are insufficient;
 mobile exports must verify the source package boundary.
+
+The feed reader must capture the application credential used for each request.
+If that credential rotates before a 401 response arrives, the client must retry
+with the replacement rather than invalidating the new session. A 401 for the
+current credential retains its normal unauthorized classification.
+
+Client transport checks must permit AbortController and animation-frame scheduling
+for request cancellation and map animation. These globals do not initiate network
+requests. Direct fetch, sockets, and alternate transports remain prohibited.
+
+The source import check must resolve the standard .ios, .android, and .native
+module suffixes to checked source files inside approved client roots.

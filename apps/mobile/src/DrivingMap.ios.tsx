@@ -1,12 +1,15 @@
 import { Button, StyleSheet, Text, View } from 'react-native';
 import type { MapSnapshot } from '@simple-strike/client-core';
 import type { Translator } from '@simple-strike/i18n';
-import type { LightningSnapshot } from '@simple-strike/api-client';
+import type { RecentSnapshot } from '@simple-strike/client-core';
 import StrikeMap, { type MapCoordinate, type MapRing } from '../modules/strike-map';
 
 export type DrivingMapProps = {
   map: MapSnapshot;
-  feed: LightningSnapshot;
+  feed: RecentSnapshot;
+  vehicleAvailable: boolean;
+  locationState: string;
+  closestText: string | null;
   rings: MapRing[];
   translator: Translator;
   locationEnabled: boolean;
@@ -35,13 +38,18 @@ export default function DrivingMap(props: DrivingMapProps) {
     />
     <View style={styles.status} pointerEvents="none">
       <Text style={styles.title}>{t.t('app.title')}</Text>
-      <Text style={styles.text}>{t.t(props.feed.mode === 'demo' ? 'map.demo' : 'map.live')}</Text>
-      <Text style={styles.text}>{t.t(props.map.following ? 'map.following' : 'map.exploring')}</Text>
+      <Text style={styles.text}>{t.t(props.feed.mode === null ? 'map.loadingFeed' : props.feed.mode === 'demo' ? 'map.demo' : 'map.live')}</Text>
+      {props.feed.connection === 'disconnected' ? <Text style={styles.text}>{t.t('map.disconnected')}</Text> : null}
+      {props.feed.connection === 'denied' ? <Text style={styles.text}>{t.t('map.accessDenied')}</Text> : null}
+      {!props.vehicleAvailable ? <Text style={styles.text}>{t.t(['denied', 'restricted', 'unavailable'].includes(props.locationState) ? 'map.locationUnavailable' : 'map.locating')}</Text> : null}
+      {props.closestText ? <Text style={styles.text}>{props.closestText}</Text> : null}
+      <Text style={styles.text}>{t.t('map.estimatedThunder')}</Text>
+      {props.vehicleAvailable ? <Text style={styles.text}>{t.t(props.map.following ? 'map.following' : 'map.exploring')}</Text> : null}
     </View>
     <View style={styles.controls}>
       <Button title={t.t('map.zoomIn')} onPress={props.onZoomIn} />
       <Button title={t.t('map.zoomOut')} onPress={props.onZoomOut} />
-      <Button title={t.t('map.recenter')} onPress={props.onRecenter} />
+      <Button title={t.t('map.recenter')} disabled={!props.vehicleAvailable} onPress={props.onRecenter} />
     </View>
   </View>;
 }

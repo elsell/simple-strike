@@ -7,6 +7,22 @@ export type FeedObserver = {
   failed(error: unknown): void;
 };
 
+/** A delayed rejection of an old token must not discard a rotated credential. */
+export async function readLightningWithSession(
+  read: (token: string, signal: AbortSignal) => Promise<FeedSnapshot>,
+  currentToken: () => string,
+  signal: AbortSignal,
+): Promise<FeedSnapshot> {
+  const token = currentToken();
+  try { return await read(token, signal); }
+  catch (error) {
+    if ((error as { status?: number } | null)?.status === 401 && token !== currentToken()) {
+      throw { kind: 'network' };
+    }
+    throw error;
+  }
+}
+
 /** One mounted feed session. Scheduling and disconnected display belong to callers. */
 export class LightningFeed {
   private stopped = false;

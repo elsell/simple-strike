@@ -10,5 +10,6 @@
 | Data source | [Data source](lightning/data-source.spec.md) | Single-adapter backend and OIDC approved |
 | Audit | [Audit](audit/audit.spec.md) | Generated |
 
-Open questions require explicit product approval. Other generated domain specs
+Consequential open questions require explicit product approval. Routine choices
+follow established platform conventions under the user's authorization. Other generated domain specs
 describe inherited platform capabilities, not product decisions.

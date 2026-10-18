@@ -55,11 +55,38 @@ The app is for personal interest, not storm warnings or safety decisions.
 
 ## Open questions
 
-- Location permission denial, stale data, offline behavior, and reconnect behavior.
+- Background location behavior during active navigation.
 - Location processing and storage privacy.
 - Route progress, rerouting, and spoken guidance implementation.
-- Sound speed model, maximum ring distance, uncertainty, and animation limits.
-- Exact age and distance cutoff boundaries, invalid/future observations, ties,
-  rounding, and localization precision.
+- Native animation performance and CarPlay display limits.
+- Further accessibility and localization refinement after native verification.
 - CarPlay animation rules, parked/driving layouts, and entitlement outcome.
 - Android Auto remains a future consideration, not the current implementation slice.
+
+## Recent observations and routine client behavior
+
+On backend disconnection, the client must retain received strikes until five
+minutes after their occurrence time and display a disconnected label. It must
+continue to expire observations while disconnected. Reconnection must deduplicate
+observations by identifier. Source-mode changes must clear the previous cache.
+Sign-out, backend changes, and explicit access rejection must clear cached data.
+A transient feed failure must not remove a valid application session.
+
+Routine defaults follow the user's authorization to make trivial decisions:
+- The age interval is zero through less than five minutes. Future timestamps are
+  excluded. Distance eligibility includes exactly 50 statute miles.
+- If location is unavailable, the map remains browsable and vehicle-relative
+  distance is hidden. Recenter requires a current location fix. No location is
+  fabricated or sent in lightning requests.
+- Foreground snapshot reads start three seconds apart after successful reads,
+  with exponential failure backoff capped at 30 seconds. Backgrounding cancels
+  reads. Foregrounding resumes reads and expires old observations.
+- Cached observations remain in memory only. Initial viewport is the demo region
+  until a real location is available; that initial center is not a vehicle fix.
+- Estimated thunder rings use a constant 343 meters per second, with no claim
+  of local atmospheric accuracy. They expire with their observations.
+
+Acceptance: a strike received at age 290 seconds remains visible after a network
+failure, then disappears at age 300 seconds without a successful network read.
+A duplicate received after reconnect creates one marker. An access rejection
+clears the cache immediately.

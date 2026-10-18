@@ -40,6 +40,7 @@ const allProviderImports = new Set([...providerImports.values()].flatMap((values
 const safeGlobals = new Set([
   'Boolean', 'Date', 'Error', 'JSON', 'Math', 'Number', 'Object', 'Promise', 'Set', 'URL',
   'clearTimeout', 'crypto', 'setTimeout',
+  'AbortController', 'requestAnimationFrame', 'cancelAnimationFrame',
 ]);
 const safeWindowMembers = new Set(['location', 'sessionStorage']);
 const browserGlobalReferences = new Set([
@@ -228,7 +229,8 @@ function belowRoot(file, sourceRoot) {
 }
 
 function resolveImportBase(base) {
-  const explicitExtension = path.extname(base);
+  const suffix = path.extname(base);
+  const explicitExtension = ['.ios', '.android', '.native'].includes(suffix) ? '' : suffix;
   if (explicitExtension && !extensions.has(explicitExtension)) return undefined;
   const substitutions = runtimeSourceSubstitutions.get(explicitExtension);
   const candidates = explicitExtension

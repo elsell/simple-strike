@@ -119,9 +119,13 @@ It exposes MapKit map rendering, location events, and driving-route calculation.
 After native source changes, rebuild the development client. A Metro reload does
 not compile Swift changes. The module is not available in Expo Go.
 
-The signed-in map screen, complete route guidance, and CarPlay scene remain in
-progress. MapKit route calculation alone does not provide verified turn-by-turn
-navigation. Do not describe the current adapter as a finished CarPlay app.
+The signed-in iOS screen now mounts the map and reads the authenticated feed.
+It includes location following, zoom and recenter, estimated thunder rings, and
+closest-strike information. Disconnected observations expire at five minutes.
+This integration still requires native simulator and device verification.
+Complete route guidance and the CarPlay scene remain unfinished. MapKit route
+calculation alone does not provide verified turn-by-turn navigation. Do not
+describe the current adapter as a finished CarPlay app.
 
 Before requesting Apple review:
 

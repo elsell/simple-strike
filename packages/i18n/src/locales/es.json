@@ -33,5 +33,18 @@
   "map.zoomIn": "Acercar",
   "map.zoomOut": "Alejar",
   "map.recenter": "Volver a centrar",
-  "map.locationPermission": "Usar tu ubicación para centrar el mapa y proporcionar indicaciones de ruta."
+  "map.locationPermission": "Usar tu ubicación para centrar el mapa y proporcionar indicaciones de ruta.",
+  "map.loadingFeed": "Conectando con los datos de rayos…",
+  "map.disconnected": "Sin conexión. Se muestran los rayos recientes.",
+  "map.accessDenied": "Esta cuenta no tiene acceso a los datos de rayos.",
+  "map.locating": "Esperando tu ubicación",
+  "map.locationUnavailable": "Ubicación no disponible. Puedes explorar el mapa.",
+  "map.closest": "Rayo más cercano: {{distance}} mi · {{age}}",
+  "map.noNearby": "No se recibieron rayos a menos de 50 millas en los últimos cinco minutos.",
+  "map.estimatedThunder": "Los anillos estiman el recorrido del trueno.",
+  "map.iosOnly": "El mapa nativo está disponible en iOS.",
+  "map.secondsAgo_other": "Hace {{count}} segundos",
+  "map.secondsAgo_one": "Hace {{count}} segundo",
+  "map.minutesAgo_other": "Hace {{count}} minutos",
+  "map.minutesAgo_one": "Hace {{count}} minuto"
 }

@@ -1,7 +1,8 @@
 # Simple Strike Delivery Guidance
 
-The generated engineering rules below remain authoritative. Product behavior
-requires explicit user approval before implementation. See specs/README.md.
+The generated engineering rules below remain authoritative. Consequential product behavior
+requires explicit user approval before implementation. Routine implementation
+decisions use established platform conventions, as authorized by the user. See specs/README.md.
 
 ## Delivery scope
 
@@ -23,7 +24,8 @@ requires explicit user approval before implementation. See specs/README.md.
 - Record unresolved decisions as open questions, not permission to invent behavior.
 - Interview breadth-first: purpose of all areas, then workflows and roles, then
   failures and lifecycle, then calculations and boundary cases.
-- Ask one focused question at a time. Each product decision needs explicit approval.
+- Ask one focused question at a time for consequential product decisions.
+- Make trivial decisions using established platform conventions and record them.
 - Small coherent decision tables may state recommendations, alternatives, rationale,
   and approval status. Update the coverage index as decisions are settled.
 

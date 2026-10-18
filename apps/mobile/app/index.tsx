@@ -11,6 +11,7 @@ import { loadMobileConfig } from '../src/config';
 import { activateExchangedSession } from '../src/session-establishment';
 import { restoreStoredSession } from '../src/session-restoration';
 import { useProviderSignIn } from '../src/provider-auth';
+import LightningScreen from '../src/LightningScreen';
 
 const { apiURL, oidcClientId: clientId, oidcIssuer: issuer } = loadMobileConfig(Constants.expoConfig?.extra);
 const storageKey = 'application_session';
@@ -120,10 +121,11 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [session?.token, session?.expiresAt, sessionRenewable, accessState, retryAttempt]);
 
-  return <SafeAreaView style={{ padding: 32, gap: 16 }}>
+  return <SafeAreaView style={{ flex: 1, padding: 16, gap: 12 }}>
     <Text style={{ fontSize: 32 }}>{i18n.t('app.title')}</Text>
     <Text>{!ready ? i18n.t('common.loading') : accessState === 'authenticated_offline' ? i18n.t('auth.offline') : profile ? i18n.t('auth.signedInAs', { name: profile.displayName || profile.email }) : i18n.t('auth.ready')}</Text>
     {errorKey ? <Text accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}
     <Button title={i18n.t(session ? 'auth.signOut' : 'auth.signIn')} disabled={!ready || (!session && !providerSignIn.ready)} onPress={() => session ? void clearSession() : void providerSignIn.begin()} />
+    {session && ready ? <LightningScreen key={apiURL} apiURL={apiURL} token={session.token} translator={i18n} onUnauthorized={() => void clearSession('errors.sessionExpired')} /> : null}
   </SafeAreaView>;
 }
