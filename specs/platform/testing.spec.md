@@ -153,7 +153,9 @@ profile validation, and revocation request paths, bodies, credential ownership,
 and status propagation without replacing the network transport. The structural
 gate uses a fail-closed AST/import allowlist to reject direct, computed, aliased,
 beacon, and dynamically imported application transports in both clients while
-permitting provider traffic only through the exact OIDC adapters. Fixtures cover
+permitting provider traffic only through the exact OIDC adapters. The allowlist
+must accept the reviewed `react-native-safe-area-context` UI package by exact
+name and must reject unreviewed subpaths and similarly named packages. Fixtures cover
 same-directory `.mjs` and `.cjs` transports, unresolved or unsupported `$lib`
 aliases, bare-window aliases and destructuring, and relative-import escapes into unapproved
 shared helper roots. The browser-global policy permits only direct reviewed
