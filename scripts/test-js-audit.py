@@ -16,6 +16,30 @@ def report(identifier, package, version):
 
 
 class AuditTest(unittest.TestCase):
+    def test_deployment_workspace_is_independent_of_installed_tools(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'source'
+            root.mkdir()
+            for name in ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc']:
+                (root / name).write_text(name)
+            for path in ['apps/web/build/index.js', 'apps/web/node_modules/tool/index.js',
+                         'apps/mobile/package.json', 'apps/mobile/ios/large-build',
+                         'packages/api-client/src/index.ts', 'packages/api-client/node_modules/.modules.yaml',
+                         'tools/eas-cli/package.json', 'patches/fix.patch']:
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text('original')
+            destination = Path(directory) / 'deployment-source'
+            gate.stage_deployment_source(root, destination)
+            self.assertEqual((destination / 'apps/web/build/index.js').read_text(), 'original')
+            self.assertFalse((destination / 'apps/web/node_modules').exists())
+            self.assertFalse((destination / 'packages/api-client/node_modules').exists())
+            self.assertFalse((destination / 'apps/mobile/ios').exists())
+            self.assertTrue((destination / 'tools/eas-cli/package.json').is_file())
+            (destination / 'packages/api-client/src/index.ts').write_text('changed')
+            self.assertEqual((root / 'packages/api-client/src/index.ts').read_text(), 'original')
+            self.assertEqual((root / 'packages/api-client/node_modules/.modules.yaml').read_text(), 'original')
+
     def test_rejected_cve_is_explicitly_reported(self):
         blocked, reviewed = gate.classify(report(gate.REJECTED, 'sprintf-js', '1.0.3'), False)
         self.assertEqual(blocked, [])

@@ -70,6 +70,23 @@ def verify_patch_files(root):
         raise ValueError('Unreviewed RSA consumer resolution')
 
 
+def stage_deployment_source(root, destination):
+    destination.mkdir()
+    for name in ('package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc'):
+        source = root / name
+        if source.is_file():
+            shutil.copy2(source, destination / name)
+    # Include the newly built web output and workspace source packages, but no
+    # installed dependency graph. pnpm deploy may rewrite installation metadata.
+    for name in ('apps/web', 'packages', 'patches'):
+        shutil.copytree(root / name, destination / name,
+                        ignore=shutil.ignore_patterns('node_modules', '.svelte-kit', '.expo'))
+    for name in ('apps/mobile', 'tools/eas-cli'):
+        target = destination / name
+        target.mkdir(parents=True)
+        shutil.copy2(root / name / 'package.json', target / 'package.json')
+
+
 def verify_runtime_artifacts():
     spec = importlib.util.spec_from_file_location('runtime_artifacts', ROOT / 'scripts/check-runtime-artifacts.py')
     artifacts = importlib.util.module_from_spec(spec)
@@ -84,11 +101,21 @@ def verify_runtime_artifacts():
         commands = [
             ([str(ROOT / 'apps/mobile/node_modules/.bin/expo'), 'export', '--platform', 'ios', '--source-maps', '--output-dir', str(ios)], ROOT / 'apps/mobile'),
             ([str(ROOT / 'apps/web/node_modules/.bin/vite'), 'build', '--sourcemap'], ROOT / 'apps/web'),
-            (['pnpm', '--filter', '@simple-strike/web', 'deploy', '--legacy', '--prod', str(web)], ROOT),
+
         ]
         with (ROOT / '.bin/runtime-artifact-build.log').open('w') as log:
             for command, directory in commands:
                 subprocess.run(command, cwd=directory, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=300)
+            deployment_source = staging / 'deployment-source'
+            stage_deployment_source(ROOT, deployment_source)
+            store = subprocess.run(['pnpm', 'store', 'path', '--silent'], cwd=ROOT,
+                                   capture_output=True, text=True, check=True, timeout=30).stdout.strip()
+            if not Path(store).is_absolute() or Path(store).name != 'v11':
+                raise ValueError('Unexpected pnpm store layout')
+            subprocess.run(['pnpm', '--store-dir', str(Path(store).parent), '--filter',
+                            '@simple-strike/web', 'deploy', '--legacy', '--prod', str(web)],
+                           cwd=deployment_source, stdout=log, stderr=subprocess.STDOUT,
+                           check=True, timeout=300)
         sources, web_sources, packages = artifacts.inspect(ios, web)
         print(f'Fresh runtime evidence: {sources} iOS mapped sources, {web_sources} web mapped sources, {packages} web manifests')
 
