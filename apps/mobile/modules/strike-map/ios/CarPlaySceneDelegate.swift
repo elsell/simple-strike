@@ -13,6 +13,10 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
   private var sceneActive = false
   private var previousTranslation = CGPoint.zero
   private var lastLabels: [String: String] = [:]
+  private var search: CarPlaySearch?
+  private var guidance: CarPlayGuidance?
+  private var lastGuidancePhase = ""
+  private var lastRouteID = ""
 
   public func templateApplicationScene(_ scene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController, to window: CPWindow) {
     bridge.startRuntime?()
@@ -33,13 +37,18 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
       button("location.fill", command: "recenter"),
     ]
     mapTemplate = template
+    guidance = CarPlayGuidance(template: template)
     // Install a root synchronously during connection, before saved state is available.
-    interfaceController.setRootTemplate(CPListTemplate(title: "Simple Strike", sections: []), animated: false) { _, _ in }
+    interfaceController.setRootTemplate(template, animated: false) { _, _ in }
     bridge.observe(observerID) { [weak self] snapshot in self?.render(snapshot) }
   }
 
   public func templateApplicationScene(_ scene: CPTemplateApplicationScene, didDisconnect interfaceController: CPInterfaceController, from window: CPWindow) {
     bridge.removeObserver(observerID)
+    search?.cancel()
+    search = nil
+    guidance?.clear()
+    guidance = nil
     sceneActive = false
     bridge.setActive(false)
     map?.setLocationEnabled(false)
@@ -53,6 +62,8 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
     mapTemplate = nil
     authorized = nil
     lastLabels = [:]
+    lastGuidancePhase = ""
+    lastRouteID = ""
   }
 
   public func sceneDidBecomeActive(_ scene: UIScene) {
@@ -75,7 +86,11 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
 
   private func updateBarButtons(_ snapshot: CarPlaySnapshotRecord) {
     guard let template = mapTemplate else { return }
-    guard snapshot.authorized else { template.leadingNavigationBarButtons = []; return }
+    guard snapshot.authorized else {
+      template.leadingNavigationBarButtons = []
+      template.trailingNavigationBarButtons = []
+      return
+    }
     var buttons: [CPBarButton] = []
     if let source = snapshot.labels["source"] {
       buttons.append(CPBarButton(title: source) { [weak self] _ in self?.showStatus() })
@@ -87,6 +102,23 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
       })
     }
     template.leadingNavigationBarButtons = buttons
+    if !snapshot.routeId.isEmpty, let end = snapshot.labels["end"] {
+      template.trailingNavigationBarButtons = [CPBarButton(title: end) { [weak self] _ in self?.bridge.command("endRoute") }]
+    } else if let navigate = snapshot.labels["navigate"] {
+      template.trailingNavigationBarButtons = [CPBarButton(title: navigate) { [weak self] _ in self?.showSearch() }]
+    }
+  }
+
+  private func showSearch() {
+    guard bridge.snapshot.authorized else { return }
+    search?.cancel()
+    let next = CarPlaySearch(bridge: bridge) { [weak self] in
+      self?.controller?.popToRootTemplate(animated: true) { _, _ in }
+    }
+    search = next
+    controller?.pushTemplate(next.template, animated: true) { [weak self, weak next] success, _ in
+      if !success, self?.search === next { next?.cancel(); self?.search = nil }
+    }
   }
 
   private func showStatus() {
@@ -110,22 +142,31 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
     map.updateRoute(snapshot.route)
     map.updateCenter(snapshot.center)
     map.updateRadius(snapshot.radiusMeters)
+    guidance?.render(snapshot)
     for button in mapTemplate.mapButtons { button.isEnabled = snapshot.authorized }
     let authorizationChanged = authorized != snapshot.authorized
-    guard authorizationChanged || lastLabels != snapshot.labels else { return }
+    guard authorizationChanged || lastLabels != snapshot.labels || lastGuidancePhase != snapshot.guidancePhase || lastRouteID != snapshot.routeId else { return }
     authorized = snapshot.authorized
     lastLabels = snapshot.labels
+    lastGuidancePhase = snapshot.guidancePhase
+    lastRouteID = snapshot.routeId
     updateBarButtons(snapshot)
     if snapshot.authorized {
       if authorizationChanged { controller.setRootTemplate(mapTemplate, animated: false) { _, _ in } }
     } else {
+      search?.cancel()
+      search = nil
       let sections: [CPListSection]
       if let message = snapshot.labels["phoneSignIn"] {
         let item = CPListItem(text: message, detailText: nil)
         item.isEnabled = false
         sections = [CPListSection(items: [item])]
       } else { sections = [] }
-      controller.setRootTemplate(CPListTemplate(title: "Simple Strike", sections: sections), animated: false) { _, _ in }
+      let setup = CPListTemplate(title: "Simple Strike", sections: sections)
+      controller.setRootTemplate(mapTemplate, animated: false) { [weak self, weak controller] success, _ in
+        guard success, let self, let controller, self.controller === controller, !self.bridge.snapshot.authorized else { return }
+        controller.pushTemplate(setup, animated: false) { _, _ in }
+      }
     }
   }
 
@@ -137,6 +178,14 @@ public final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationScene
   }
 
   public func mapTemplateDidBeginPanGesture(_ mapTemplate: CPMapTemplate) { previousTranslation = .zero }
+
+  public func mapTemplate(_ mapTemplate: CPMapTemplate, startedTrip trip: CPTrip, using routeChoice: CPRouteChoice) {
+    bridge.command("startRoute")
+  }
+
+  public func mapTemplateDidCancelNavigation(_ mapTemplate: CPMapTemplate) {
+    if guidance?.applying != true { bridge.command("endRoute") }
+  }
 
   public func mapTemplateDidShowPanningInterface(_ mapTemplate: CPMapTemplate) {
     guard let close = bridge.snapshot.labels["close"] else { return }

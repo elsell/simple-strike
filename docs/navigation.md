@@ -40,7 +40,10 @@ Phone URL callbacks are forwarded to the original application handlers. Tests
 check the generated configuration and reject an unexpected startup template.
 These are configuration checks, not native lifecycle tests.
 
-CarPlay destination search, trip preview, and maneuver templates remain unfinished.
+CarPlay now has destination search, trip preview, and maneuver template code.
+Search calls the shared MapKit adapter. Destination selection and route commands
+enter the phone's application controllers. Trip time estimates decrease in
+proportion to the remaining route distance. They are estimates, not traffic updates.
 The latest scene and startup code still needs a clean Xcode build and native
 interaction checks. Cold car launch, phone attachment, phone lock, reconnection,
 and sign-out must pass before this integration can be called complete. The

@@ -93,6 +93,11 @@ struct CarPlaySnapshotRecord: Record {
   @Field var strikes: [StrikeRecord] = []
   @Field var rings: [RingRecord] = []
   @Field var route: [CoordinateRecord] = []
+  @Field var routeId: String = ""
+  @Field var routeSummary: String = ""
+  @Field var maneuverDistanceMeters: Double = 0
+  @Field var instructionId: String = ""
+  @Field var guidanceStatus: String = ""
   @Field var guidancePhase: String = "idle"
   @Field var destinationName: String = ""
   @Field var instruction: String = ""

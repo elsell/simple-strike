@@ -135,10 +135,15 @@ export default function LightningScreen(props: LightningScreenProps) {
     vehicleAvailable, vehicle: viewport.vehicle, center: viewport.center, radiusMeters: viewport.radiusMeters,
     strikes: snapshot.strikes.map(strike => ({ id: strike.id, ...strike.position })), rings, route: route?.coordinates ?? [],
     guidancePhase: navigation.session.phase,
+    routeId: route?.id ?? '',
+    routeSummary: route ? t.t('navigation.summary', { distance: t.number(route.distanceMeters / 1609.344, { maximumFractionDigits: 1 }), minutes: t.number(Math.ceil(route.expectedTravelSeconds / 60)) }) : '',
+    maneuverDistanceMeters: progress?.maneuverDistanceMeters ?? 0,
+    instructionId: progress ? `${route?.id}:${progress.stepIndex}` : '',
+    guidanceStatus: t.t(navigation.session.phase === 'arrived' ? 'navigation.arrived' : navigation.session.phase === 'rerouting' ? 'navigation.rerouting' : progress?.status === 'off-route' ? 'navigation.offRoute' : 'navigation.locationRequired'),
     destinationName: navigation.session.destination?.name ?? navigation.preview.destination?.name ?? '',
     instruction: progress?.status === 'tracking' && navigation.session.phase === 'guiding' ? route?.steps[progress.stepIndex]?.instructions ?? '' : '',
     distanceRemainingMeters: progress?.remainingMeters ?? route?.distanceMeters ?? 0,
-    expectedTravelSeconds: route?.expectedTravelSeconds ?? 0,
+    expectedTravelSeconds: route ? route.expectedTravelSeconds * Math.max(0, Math.min(1, (progress?.remainingMeters ?? route.distanceMeters) / route.distanceMeters)) : 0,
     sourceMode: snapshot.mode ?? '', closestText: closestText ?? '',
   });
   return <>{carFailed ? <Text accessibilityRole="alert">{t.t('carplay.failed')}</Text> : null}<DrivingMap map={viewport} feed={snapshot} navigation={navigation} rings={rings} translator={t}

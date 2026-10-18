@@ -12,6 +12,11 @@ export type CarSnapshot = {
   strikes: MapStrike[];
   rings: MapRing[];
   route: MapCoordinate[];
+  routeId: string;
+  routeSummary: string;
+  maneuverDistanceMeters: number;
+  instructionId: string;
+  guidanceStatus: string;
   guidancePhase: string;
   destinationName: string;
   instruction: string;

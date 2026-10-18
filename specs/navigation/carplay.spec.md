@@ -17,6 +17,16 @@ The navigation entitlement and Apple's approval remain external requirements.
   display must not create another provider connection or independent route.
 - A typed native presentation adapter must receive map and guidance snapshots and
   emit user commands. It must not receive backend or identity-provider credentials.
+- CarPlay search must use the existing MapKit search adapter. It may manage its
+  template's pending search independently, but selecting a result must enter the
+  shared route planner. It must finish each search callback once, discard replaced
+  results, and cancel pending work on sign-out or scene disconnection.
+- Trip previews and maneuver cards must use the shared route geometry and
+  progress. Remaining time may use the original route estimate scaled by the
+  remaining distance. It must not be presented as a refreshed traffic estimate.
+- A paused or rerouting session must not show an old instruction as current.
+  Arrival must finish the native guidance session. End Route must clear previews
+  and native guidance as well as the shared application route.
 - Native callbacks must enter the existing application controllers. They must not
   bypass authentication, issue provider requests, or fabricate strikes or location.
 - Labels must come from the shared locale catalog. Native startup may show the
