@@ -402,3 +402,12 @@ or unsupported evidence must fail closed. A previous scan or a manually supplied
 success marker must not enable the exception. Expiry must use the current UTC date.
 The check must still fail on any other unresolved finding. This exception does
 not waive native acceptance, image review, or any other merge requirement.
+
+### Native demo verification artifact
+
+An affected successful hosted iOS build must publish its unsigned simulator app
+and mechanically derived Git revision as a short-lived CI artifact. The archive
+must preserve the application bundle structure. It must not include signing
+material, build caches, or backend credentials. This development build requires
+Metro and the demo backend. Artifact availability does not prove launch, map
+interaction, device signing, or CarPlay acceptance.

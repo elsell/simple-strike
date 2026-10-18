@@ -127,6 +127,25 @@ Complete route guidance and the CarPlay scene remain unfinished. MapKit route
 calculation alone does not provide verified turn-by-turn navigation. Do not
 describe the current adapter as a finished CarPlay app.
 
+### Download a compiled simulator app
+
+Affected successful iOS CI jobs publish an `ios-simulator-<revision>` artifact for
+seven days. Download and extract it from the workflow run on a Mac with Xcode 26.
+The inner zip preserves the app bundle. Read `revision.txt` and check out that
+revision before starting Metro. A pull request artifact may identify its tested
+merge commit. Install dependencies from the frozen lockfile in that checkout.
+
+Start the local demo stack described below, then start Metro with
+`pnpm --dir apps/mobile start`. Boot an iOS simulator in Xcode. Install the
+extracted `.app` bundle with `xcrun simctl install booted /path/to/SimpleStrike.app`
+(use its actual filename), then open Simple Strike in the simulator. Connect the
+development client to the local Metro server if prompted. This artifact does not
+run on a physical iPhone and does not require an Apple signing identity.
+
+The downloaded build uses development endpoints. Do not publish it as a signed
+release. Continue with the map acceptance procedure; downloading or installing
+an artifact is not evidence that those scenarios passed.
+
 ### Demo map acceptance on an iOS simulator
 
 Run this procedure on macOS against an isolated local demo deployment. Record the
