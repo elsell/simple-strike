@@ -1,6 +1,6 @@
 import type { Clock } from './closest-strike';
 import { validatedRoute, type Route, type Place, type RoutePort } from './route-planner';
-import { RouteProgress, type NavigationFix, type ProgressSnapshot } from './route-progress';
+import { RouteProgress, usableNavigationFix, type NavigationFix, type ProgressSnapshot } from './route-progress';
 export interface SpeechPort { speak(text: string): void; stop(): void; }
 export type GuidanceSnapshot = {
   phase: 'idle' | 'guiding' | 'rerouting' | 'arrived';
@@ -47,6 +47,9 @@ export class Guidance {
   retry(): void { this.attempts = 0; this.lastAttempt = -Infinity; this.state.error = null; }
   async update(fix: NavigationFix): Promise<void> {
     if (!this.progress || this.state.phase === 'arrived') return;
+    const last = this.latestFix;
+    if (last && usableNavigationFix(fix, this.clock.now()) && fix.timestampMs === last.timestampMs &&
+        fix.latitude === last.latitude && fix.longitude === last.longitude && fix.accuracyMeters === last.accuracyMeters) return;
     const previous = this.state.progress?.status;
     const result = this.progress.update(fix);
     this.state.progress = result;

@@ -51,6 +51,10 @@ The navigation entitlement and Apple's approval remain external requirements.
   scenes are inactive.
 - Scene disconnection must release its map and template observers. It must not
   sign out the phone or create a second location or speech session.
+- Identical usable location fixes delivered by both map surfaces must be
+  processed once by guidance. Duplicate delivery must not pause speech, advance
+  progress, or count as another observation for rerouting. A stale fix must still
+  pause guidance, even if it was delivered before.
 - Generated native startup changes must fail explicitly if the expected Expo
   startup no longer matches. The configuration must retain the original phone
   URL handlers and must not create a second React Native root.

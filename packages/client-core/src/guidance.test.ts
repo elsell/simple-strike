@@ -18,6 +18,36 @@ function setup(calculate: () => Promise<Route> = async () => route) {
   guidance.start(route, destination, fix(0, 0));
   return { guidance, speech, fix };
 }
+test('the same usable fix from phone and car does not interrupt guidance but stale replay pauses it', async () => {
+  let now = 1000;
+  const speech = new Speech();
+  const guidance = new Guidance({ calculate: async () => route }, speech, { now: () => now }, 'Arrived');
+  const fix = { latitude: 0, longitude: 0, accuracyMeters: 5, timestampMs: now };
+  guidance.start(route, destination, fix);
+  const before = guidance.snapshot(); const stops = speech.stops;
+  await guidance.update({ ...fix });
+  assert.deepEqual(guidance.snapshot(), before);
+  assert.equal(speech.stops, stops);
+  assert.deepEqual(speech.messages, ['East']);
+  now += 10001;
+  await guidance.update({ ...fix });
+  assert.equal(guidance.snapshot().progress?.status, 'location-unavailable');
+  assert.equal(speech.stops, stops + 1);
+});
+test('duplicate off-route delivery cannot count as eight seconds of new observations', async () => {
+  let now = 1000; let recalculations = 0;
+  const guidance = new Guidance({ calculate: async () => { recalculations++; return route; } }, new Speech(), { now: () => now }, 'Arrived');
+  guidance.start(route, destination, { latitude: 0, longitude: 0, accuracyMeters: 5, timestampMs: now });
+  now++;
+  const away = { latitude: .005, longitude: .001, accuracyMeters: 5, timestampMs: now };
+  await guidance.update(away);
+  now += 8000;
+  await guidance.update({ ...away });
+  assert.equal(recalculations, 0);
+  assert.equal(guidance.snapshot().progress?.status, 'off-route');
+  await guidance.update({ ...away, timestampMs: now });
+  assert.equal(recalculations, 1);
+});
 test('guidance announces maneuvers once and End Route clears state and speech', async () => {
   const { guidance, speech, fix } = setup();
   assert.deepEqual(speech.messages, ['East']);
