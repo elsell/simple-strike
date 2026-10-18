@@ -52,3 +52,50 @@ test('switching servers while A refreshes cannot persist or send its replacement
   await createSessionApiClient(bURL, () => bSession.token).profile();
   assert.deepEqual(requests.filter(request => request.server === 'b').map(request => request.authorization), [undefined, 'Bearer b-session']);
 });
+
+
+test('sign-out retires pending work before storage completes and preserves a fresh sign-in', async () => {
+  const { replaceSessionScope } = await import('../src/session-disposal');
+  const records = new Map<string, string>();
+  let release!: () => void;
+  const blocked = new Promise<void>(resolve => { release = resolve; });
+  const storage = {
+    read: async (key: string) => records.get(key) ?? null,
+    write: async (key: string, value: string) => { records.set(key, value); },
+    remove: async (key: string) => { await blocked; records.delete(key); },
+  };
+  const old = new SessionScope('same-backend', storage);
+  await old.save('old-session');
+  let replaced = false;
+  const replacing = replaceSessionScope(old, async () => {
+    replaced = true;
+    return new SessionScope(old.key, storage);
+  });
+  assert.equal(old.active, false);
+  assert.equal(replaced, false);
+  release();
+  const fresh = await replacing;
+  assert.equal(await fresh.read(), null);
+  await fresh.save('new-sign-in');
+  // Both successful refresh and transient failure callbacks can attempt saves.
+  await old.save('late-replacement');
+  await old.save('old-session');
+  assert.equal(old.active, false);
+  assert.equal(await old.read(), null);
+  assert.equal(await fresh.read(), 'new-sign-in');
+});
+
+test('failed secure-storage disposal keeps the retired account closed', async () => {
+  const { replaceSessionScope } = await import('../src/session-disposal');
+  const scope = new SessionScope('backend', {
+    read: async () => 'old-session',
+    write: async () => { throw new Error('must not write'); },
+    remove: async () => { throw new Error('storage unavailable'); },
+  });
+  let prepared = false;
+  await assert.rejects(replaceSessionScope(scope, async () => { prepared = true; }), /storage unavailable/);
+  assert.equal(scope.active, false);
+  assert.equal(prepared, false);
+  assert.equal(await scope.read(), null);
+  await scope.save('late-session');
+});

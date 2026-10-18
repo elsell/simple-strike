@@ -19,7 +19,7 @@ class LocalizedError extends Error { constructor(readonly key: MessageKey) { sup
 
 function localizedFailure(cause: unknown, fallback: MessageKey): MessageKey { return cause instanceof LocalizedError ? cause.key : fallback; }
 
-export default function ConnectedHome({ config, scope, onChangeServer }: { config: ClientRuntimeConfig; scope: SessionScope; onChangeServer: () => Promise<void> }) {
+export default function ConnectedHome({ config, scope, onChangeServer, onResetSession }: { config: ClientRuntimeConfig; scope: SessionScope; onChangeServer: () => Promise<void>; onResetSession: () => Promise<void> }) {
   const { apiURL, oidcClientId: clientId, oidcIssuer: issuer } = config;
   async function saveSession(session: Session | null) {
     await scope.save(session ? JSON.stringify(session) : null);
@@ -65,7 +65,11 @@ export default function ConnectedHome({ config, scope, onChangeServer }: { confi
   }
   async function clearSession(message: MessageKey | null = null, state: SessionAccessState = 'authentication_required') {
     const token = session?.token;
-    await saveSession(null); setAccountOpen(false); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
+    if (!scope.active) return;
+    const reset = onResetSession();
+    setReady(false); setAccountOpen(false); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
+    try { await reset; }
+    catch { setErrorKey('connection.storageError'); setReady(true); }
     if (token) try { await createSessionApiClient(apiURL, () => token).revoke(); } catch { /* local disposal is authoritative */ }
   }
   async function handleSessionFailure(cause: unknown, current: Session) {

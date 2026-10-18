@@ -11,14 +11,15 @@ import { createDeviceTranslator } from '../src/i18n';
 import { loadMobileConfig } from '../src/config';
 import ConnectedHome from '../src/ConnectedHome';
 import CarPlaySetup from '../src/CarPlaySetup';
+import { replaceSessionScope } from '../src/session-disposal';
 
 const defaults = loadMobileConfig(Constants.expoConfig?.extra);
 const settingsKey = 'backend_connection_v1';
 const i18n = createDeviceTranslator(getLocales);
-type Connection = { config: ClientRuntimeConfig; scope: SessionScope };
+type Connection = { instance: string; config: ClientRuntimeConfig; scope: SessionScope };
 async function prepare(config: ClientRuntimeConfig): Promise<Connection> {
   const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, connectionIdentity(config));
-  return { config, scope: new SessionScope(`application_session_${hash}`, {
+  return { instance: Crypto.randomUUID(), config, scope: new SessionScope(`application_session_${hash}`, {
     read: key => SecureStore.getItemAsync(key),
     write: (key, value) => SecureStore.setItemAsync(key, value),
     remove: key => SecureStore.deleteItemAsync(key),
@@ -31,6 +32,7 @@ export default function Home() {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<MessageKey | null>(null);
+  const lifecycle = useRef(0);
   const pending = useRef<AbortController | null>(null);
   useEffect(() => {
     let active = true;
@@ -66,14 +68,21 @@ export default function Home() {
     } catch { setError('connection.failed'); }
     finally { clearTimeout(timeout); pending.current = null; setBusy(false); }
   }
+  async function resetSession() {
+    if (!connection) return;
+    const generation = ++lifecycle.current;
+    const next = await replaceSessionScope(connection.scope, () => prepare(connection.config));
+    if (generation === lifecycle.current) setConnection(next);
+  }
   async function changeServer() {
     if (!connection) return;
+    const generation = ++lifecycle.current;
     await connection.scope.close();
     await SecureStore.deleteItemAsync(settingsKey);
-    setConnection(null); setError(null);
+    if (generation === lifecycle.current) { setConnection(null); setError(null); }
   }
 
-  if (connection) return <ConnectedHome key={connection.scope.key} config={connection.config} scope={connection.scope} onChangeServer={changeServer} />;
+  if (connection) return <ConnectedHome key={connection.instance} config={connection.config} scope={connection.scope} onChangeServer={changeServer} onResetSession={resetSession} />;
   return <SafeAreaView style={styles.container}>
     <CarPlaySetup translator={i18n} />
     <Text style={styles.title} accessibilityRole="header">{i18n.t('app.title')}</Text>
