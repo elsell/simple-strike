@@ -2,9 +2,10 @@
 
 ## Current slice
 
-Implement backend connection setup through the self-hosted API and iOS client.
-See [connection setup](../lightning/connection.spec.md). This is the only product
-slice in active implementation.
+Implement optional driving navigation and native CarPlay integration. See
+[navigation](../navigation/navigation.spec.md). This is the only product slice
+in active implementation. Backend connection setup is implemented in a stacked
+draft and awaits native verification and its required CI checks.
 
 ## Awaiting verification
 
@@ -15,8 +16,7 @@ of that dependency. Runtime image security is the one active infrastructure bloc
 
 ## Following slices
 
-1. Deliver optional turn-by-turn navigation and native CarPlay integration.
-2. Complete device, deployment, and Apple review preparation and verification.
+1. Complete device, deployment, and Apple review preparation and verification.
 
 ## External dependencies
 

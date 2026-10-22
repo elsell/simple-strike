@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      native_demo:
+        description: Require public demo OIDC and native map acceptance
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -265,13 +270,18 @@ jobs:
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Build iOS simulator application
         run: make mobile-build-ios
+        env:
+          SIMPLE_STRIKE_APP_ENV: development
+          SIMPLE_STRIKE_API_URL: http://localhost:8080
+          SIMPLE_STRIKE_OIDC_ISSUER: http://localhost:5556/dex
+          SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID: simple-strike-mobile
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Verify locked CocoaPods
         run: cd apps/mobile && test "$(bundle exec pod --version)" = "1.16.2"
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
         name: Package iOS simulator application
         run: |
-          application="$(find .bin/ios-simulator/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' -type d -print -quit)"
+          application="$(find .bin/ios-simulator/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' -type d -print -quit)"
           test -n "$application"
           mkdir -p .bin/ios-simulator-artifact
           ditto "$application" ".bin/ios-simulator-artifact/$(basename "$application")"
@@ -279,13 +289,48 @@ jobs:
           cp docs/mobile.md .bin/ios-simulator-artifact/verification.md
           ditto -c -k --sequesterRsrc --keepParent .bin/ios-simulator-artifact .bin/ios-simulator-artifact.zip
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
-        name: Upload unsigned simulator build
+        name: Upload simulator build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ios-simulator-${{ github.sha }}
           path: .bin/ios-simulator-artifact.zip
           include-hidden-files: true
           if-no-files-found: error
+          retention-days: 7
+      - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
+        name: Launch and inspect iOS setup screen
+        run: python3 scripts/test-ios-launch-smoke.py && python3 scripts/ios-launch-smoke.py
+      - if: steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
+        name: Exercise native connection controls
+        run: |
+          (cd apps/mobile && bundle exec ruby ../../scripts/configure-ios-ui-tests.rb)
+          if [[ "$NATIVE_DEMO" == true ]]; then
+            python3 scripts/run-ios-ui-tests.py --demo
+          else
+            python3 scripts/run-ios-ui-tests.py
+          fi
+        env:
+          NATIVE_DEMO: ${{ github.event_name == 'workflow_dispatch' && inputs.native_demo || false }}
+      - if: always() && steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
+        name: Upload native interaction evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-interaction-${{ github.sha }}
+          path: .bin/ios-ui-tests/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+      - if: always() && steps.routing.outcome == 'success' && needs.changes.outputs.native == 'true'
+        name: Upload iOS launch evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-launch-${{ github.sha }}
+          path: |
+            .bin/ios-launch-smoke/*.png
+            .bin/ios-launch-smoke/*.json
+            .bin/ios-launch-smoke/*.log
+          include-hidden-files: true
+          if-no-files-found: warn
           retention-days: 7
       - if: steps.routing.outcome == 'success' && needs.changes.outputs.native != 'true'
         name: Report skipped iOS native build

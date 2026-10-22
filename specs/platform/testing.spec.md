@@ -23,7 +23,7 @@ after bootstrap without manual source edits.
 Mobile verification names its evidence precisely. Fast checks run Expo Doctor,
 Expo dependency compatibility, JavaScript bundle export, configuration/identifier
 validation, and clean iOS/Android prebuild. Linux CI compiles an unsigned Android
-debug application with Gradle. A macOS main/release/manual job compiles an unsigned
+debug application with Gradle. A macOS main/release/manual job compiles an ad hoc signed
 iOS simulator application with Xcode. Export success alone is never reported as
 a native build. Session-state tests prove that transient network, 429, and 5xx
 failures preserve a locally valid credential, while expiry, explicit 401, and
@@ -153,7 +153,9 @@ profile validation, and revocation request paths, bodies, credential ownership,
 and status propagation without replacing the network transport. The structural
 gate uses a fail-closed AST/import allowlist to reject direct, computed, aliased,
 beacon, and dynamically imported application transports in both clients while
-permitting provider traffic only through the exact OIDC adapters. Fixtures cover
+permitting provider traffic only through the exact OIDC adapters. The allowlist
+must accept the reviewed `react-native-safe-area-context` UI package by exact
+name and must reject unreviewed subpaths and similarly named packages. Fixtures cover
 same-directory `.mjs` and `.cjs` transports, unresolved or unsupported `$lib`
 aliases, bare-window aliases and destructuring, and relative-import escapes into unapproved
 shared helper roots. The browser-global policy permits only direct reviewed
@@ -405,12 +407,31 @@ not waive native acceptance, image review, or any other merge requirement.
 
 ### Native demo verification artifact
 
-An affected successful hosted iOS build must publish its unsigned simulator app
+An affected successful hosted iOS build must publish its ad hoc signed simulator app
 and mechanically derived Git revision as a short-lived CI artifact. The archive
 must preserve the application bundle structure. It must not include signing
-material, build caches, or backend credentials. This development build requires
-Metro and the demo backend. Artifact availability does not prove launch, map
+material, build caches, or backend credentials. This simulator build must embed
+its JavaScript bundle and use the explicit
+development demo configuration. It must not require Metro or the development
+launcher. It still requires a reachable demo backend for sign-in and map data.
+Artifact availability does not prove launch, map
 interaction, device signing, or CarPlay acceptance.
+
+An affected iOS build must also install and launch its exact simulator app in a
+fresh, task-owned simulator. The check must load the embedded bundle, capture a
+screenshot, and verify the signed-out backend
+setup screen by recognized text. A living process or a splash screen alone must
+not pass. The screenshot and recognized text must be retained for inspection.
+The simulator build must retain Xcode's application identity for Keychain access.
+It must not require a developer certificate or provisioning profile. A fresh
+installation showing a connection-storage error must fail the startup check.
+The setup screen must finish storage initialization before the check passes;
+visible loading text is not readiness.
+Installation into a fresh hosted simulator may take up to three minutes. An
+installation timeout must fail the check, retain diagnostics, and must not count
+as successful application launch.
+The check must clean up only its own simulator. This smoke
+check does not establish CarPlay, authenticated map behavior, or route guidance.
 
 The temporary production-dependency deployment used by the audit gate must run
 in an isolated workspace copy. It must not change the installed development
@@ -430,3 +451,24 @@ amd64 and arm64 image manifests with its October 17 database. The index signatur
 The image retains the minimal static-runtime role. This base-image check does
 not establish a clean final application image or replace exact-candidate
 production-image and live acceptance checks. The web runtime review remains open.
+
+## Hosted native interaction acceptance
+
+Mac requirements must use hosted macOS CI runners. Native UI acceptance must run
+XCUITest against the built application with real controls and secure storage.
+It must retain an XCTest result bundle and the tested Git revision. The first
+connection scenarios must prove that an empty address disables Connect, an
+invalid address produces localized feedback, and relaunch restores a usable
+setup form without a storage error. These scenarios do not prove successful
+OIDC sign-in, map behavior, background navigation, or CarPlay interaction.
+The public demo endpoint is `https://demo.simplestrike.online`; authenticated
+scenarios require its verified deployment or an equivalent controlled full stack.
+
+A manually selected demo scenario must use the published HTTPS demo backend and
+its real OIDC browser flow. It must not inject sessions or replace network
+responses. It must assert the simulated-data label, native map, follow-me state,
+pan and recenter, retained sign-in after relaunch, and sign-out after relaunch.
+It must retain screenshots and record the selected scenario in the artifact.
+An unavailable demo must fail this scenario, not skip it. Ordinary setup-only CI
+must exclude it explicitly. Passing this scenario does not prove route guidance,
+ring animation quality, locked-screen behavior, or CarPlay interaction.

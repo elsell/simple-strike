@@ -1,6 +1,7 @@
 import { getLocales } from 'expo-localization';
 import { useEffect, useState } from 'react';
-import { Button, Modal, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Button, Modal, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { createSessionApiClient, sessionExpiryAdvanced, sessionRefreshDelay, sessionRefreshLeadMs } from '@simple-strike/api-client';
 import { classifySessionFailure, isSessionFailure, refreshSessionCredential, sessionCredentialFromResponse, sessionRetryDelay, validateSessionCredential, type SessionAccessState, type SessionFailure, type ClientRuntimeConfig, type SessionScope } from '@simple-strike/client-core';
 import { type MessageKey } from '@simple-strike/i18n';
@@ -9,6 +10,7 @@ import { activateExchangedSession } from './session-establishment';
 import { restoreStoredSession } from './session-restoration';
 import { useProviderSignIn } from './provider-auth';
 import LightningScreen from './LightningScreen';
+import CarPlaySetup from './CarPlaySetup';
 
 const i18n = createDeviceTranslator(getLocales);
 
@@ -18,7 +20,7 @@ class LocalizedError extends Error { constructor(readonly key: MessageKey) { sup
 
 function localizedFailure(cause: unknown, fallback: MessageKey): MessageKey { return cause instanceof LocalizedError ? cause.key : fallback; }
 
-export default function ConnectedHome({ config, scope, onChangeServer }: { config: ClientRuntimeConfig; scope: SessionScope; onChangeServer: () => Promise<void> }) {
+export default function ConnectedHome({ config, scope, onChangeServer, onResetSession }: { config: ClientRuntimeConfig; scope: SessionScope; onChangeServer: () => Promise<void>; onResetSession: () => Promise<void> }) {
   const { apiURL, oidcClientId: clientId, oidcIssuer: issuer } = config;
   async function saveSession(session: Session | null) {
     await scope.save(session ? JSON.stringify(session) : null);
@@ -64,7 +66,11 @@ export default function ConnectedHome({ config, scope, onChangeServer }: { confi
   }
   async function clearSession(message: MessageKey | null = null, state: SessionAccessState = 'authentication_required') {
     const token = session?.token;
-    await saveSession(null); setAccountOpen(false); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
+    if (!scope.active) return;
+    const reset = onResetSession();
+    setReady(false); setAccountOpen(false); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
+    try { await reset; }
+    catch { setErrorKey('connection.storageError'); setReady(true); }
     if (token) try { await createSessionApiClient(apiURL, () => token).revoke(); } catch { /* local disposal is authoritative */ }
   }
   async function handleSessionFailure(cause: unknown, current: Session) {
@@ -155,6 +161,7 @@ export default function ConnectedHome({ config, scope, onChangeServer }: { confi
   </SafeAreaView>;
 
   return <SafeAreaView style={styles.account}>
+    <CarPlaySetup translator={i18n} />
     <Text style={styles.accountTitle}>{i18n.t('app.title')}</Text>
     <Text>{!ready ? i18n.t('common.loading') : i18n.t('auth.ready')}</Text>
     {errorKey ? <Text accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}

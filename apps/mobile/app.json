@@ -14,7 +14,7 @@
     },
     "runtimeVersion": { "policy": "appVersion" },
     "updates": { "enabled": false, "checkAutomatically": "NEVER" },
-    "plugins": ["expo-router", "expo-secure-store", "expo-dev-client"],
+    "plugins": ["expo-router", "expo-secure-store", "expo-dev-client", "./plugins/with-carplay.cjs"],
     "ios": {
       "bundleIdentifier": "com.elsell.simplestrike",
       "buildNumber": "1",

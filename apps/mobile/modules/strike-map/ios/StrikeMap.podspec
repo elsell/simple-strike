@@ -12,5 +12,5 @@ Pod::Spec.new do |s|
   s.dependency 'ExpoModulesCore'
   s.source_files = '**/*.{h,m,mm,swift}'
   s.swift_version = '5.9'
-  s.frameworks = 'MapKit', 'CoreLocation'
+  s.frameworks = 'MapKit', 'CoreLocation', 'CarPlay', 'AVFoundation'
 end

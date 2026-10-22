@@ -7,6 +7,7 @@ export default ({ config }: { config: Record<string, unknown> }) => ({
     ...((config.ios as Record<string, unknown> | undefined) ?? {}),
     infoPlist: {
       ...(((config.ios as Record<string, unknown> | undefined)?.infoPlist as Record<string, unknown> | undefined) ?? {}),
+      UIBackgroundModes: ['location', 'audio'],
       NSLocationWhenInUseUsageDescription: en['map.locationPermission'],
     },
   },

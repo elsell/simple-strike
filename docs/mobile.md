@@ -6,8 +6,8 @@ development client, and a signed store build.
 
 ## First development build
 
-Run `make dev`, then create and launch an unsigned development client in another
-terminal:
+Run `make dev`, then create and launch a development client in another
+terminal. Simulator builds use ad hoc signing without developer credentials:
 
 ```sh
 make mobile-dev-ios      # macOS with Xcode
@@ -70,7 +70,7 @@ make mobile-validate       # Expo Doctor, dependency compatibility, config ident
 make mobile-export         # iOS and Android Metro/Expo bundles only
 make mobile-prebuild       # clean generated iOS and Android native projects
 make mobile-build-android  # unsigned Android debug APK through Gradle
-make mobile-build-ios      # unsigned iOS simulator app through Xcode
+make mobile-build-ios      # ad hoc signed iOS simulator app through Xcode
 ```
 
 Bundle export is useful but is not a native build. Generated CI compiles Android
@@ -147,20 +147,27 @@ describe the current adapter as a finished CarPlay app.
 
 Affected successful iOS CI jobs publish an `ios-simulator-<revision>` artifact for
 seven days. Download and extract it from the workflow run on a Mac with Xcode 26.
-The inner zip preserves the app bundle. Read `revision.txt` and check out that
-revision before starting Metro. A pull request artifact may identify its tested
-merge commit. Install dependencies from the frozen lockfile in that checkout.
+The inner zip preserves the app bundle. Read `revision.txt` to identify the tested
+revision. A pull request artifact may identify its tested merge commit. The app
+contains its JavaScript bundle and does not need Metro or the development launcher.
 
-Start the local demo stack described below, then start Metro with
-`pnpm --dir apps/mobile start`. Boot an iOS simulator in Xcode. Install the
+Start the local demo stack described below. Boot an iOS simulator in Xcode. Install the
 extracted `.app` bundle with `xcrun simctl install booted /path/to/SimpleStrike.app`
-(use its actual filename), then open Simple Strike in the simulator. Connect the
-development client to the local Metro server if prompted. This artifact does not
+(use its actual filename), then open Simple Strike in the simulator. This artifact does not
 run on a physical iPhone and does not require an Apple signing identity.
 
 The downloaded build uses development endpoints. Do not publish it as a signed
 release. Continue with the map acceptance procedure; downloading or installing
 an artifact is not evidence that those scenarios passed.
+
+CI retains the ad hoc signed simulator build before the launch check. A downloadable
+artifact therefore does not imply that startup or interaction checks passed.
+
+The iOS job also runs `python3 scripts/ios-launch-smoke.py` after building. It
+creates a fresh simulator, loads the embedded bundle, and checks the ready backend
+setup screen without a storage error. The `ios-launch-<revision>` artifact contains its screenshot, recognized
+text, and result. Inspect the screenshot as well as the result. This check covers
+signed-out phone startup only. It does not verify sign-in, maps, or CarPlay.
 
 ### Demo map acceptance on an iOS simulator
 
@@ -196,6 +203,9 @@ procedure, not evidence that the checks have passed.
 Record failures separately from passed cases. CarPlay, turn-by-turn guidance,
 physical-device behavior, and Apple approval require their own verification.
 
+The [Apple review draft](apple-review.md) records the product explanation, demo
+access requirements, data inventory, and signing steps. It is not submission-ready.
+
 Before requesting Apple review:
 
 1. Demonstrate destination entry, route progress, spoken maneuvers, rerouting,
@@ -222,3 +232,22 @@ Apple supplies the navigation map surface through
 control layer through
 [CPMapTemplate](https://developer.apple.com/documentation/carplay/cpmaptemplate).
 Keep native CarPlay verification separate from the earlier browser prototype.
+
+## Hosted interaction checks
+
+Mac verification runs on macOS CI. The native job uses XCUITest to drive the
+built app's backend address field, empty-address button state, invalid-address
+feedback, and relaunch. Download the `ios-interaction` artifact and open its
+`results.xcresult` in Xcode to inspect test results and screenshots. The artifact
+includes the tested revision. These initial checks do not establish authenticated
+map, route, background speech, or CarPlay behavior. Expand the same suite against
+the reachable demo stack before claiming those workflows pass.
+
+To require the real demo flow, dispatch CI with `native_demo=true` after the
+public demo is healthy. This selects `DemoTests` instead of `ConnectionTests`.
+The simulator uses a fixed test location in Tampa. The test signs in through Dex
+with the published demo credentials, checks the native map and follow-me controls,
+pans and recenters, relaunches, and signs out. It fails if the server or login is
+unavailable. The artifact's `scenario.txt` identifies the selected suite.
+This scenario has not yet been executed against the public deployment. Do not
+report authenticated native acceptance from a setup-only run.

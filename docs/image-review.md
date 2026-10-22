@@ -14,6 +14,14 @@ The vendor SBOM includes the updated certificate bundle. See the
 [testing specification](../specs/platform/testing.spec.md#api-runtime-certificate-refresh).
 Final application-image scans and acceptance still apply.
 
+The final Linux amd64 API image built from source
+`22ff9051444a955c4affdf0e7b73e20e28614648` was scanned with Grype 0.111.1 on
+October 18. Image manifest digest
+`sha256:472ce573706ebc6955a5c68fe7e18584878485fe80f5bf4d094168dfd9e73bce`
+reported zero matches and zero ignored matches. The scanner database reports a
+build time of `2026-10-18T06:27:17Z`. This is local candidate-image evidence,
+not registry publication or deployment evidence. The web image gate remains open.
+
 ## Web runtime investigation
 
 The currently pinned Node runtime is
@@ -39,6 +47,22 @@ Next: verify a fixed vendor runtime, or establish exact remediation and runtime
 reachability for each remaining high finding. Review the candidate's signatures
 and SBOM, test the application, and scan the complete final image before release.
 Do not apply the approved JavaScript build-tool exception to runtime images.
+
+## Upstream status checked on October 18
+
+Node has [announced security releases for October 21](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases)
+for the 22, 24, and 26 release lines, with high-severity fixes. The announcement
+does not identify the advisories. It does not prove that the findings above will
+be fixed. Check the published release details and the vendor image when available,
+then repeat signature, age-policy, application, and final-image verification.
+The [24.22.0 release](https://nodejs.org/en/blog/release/v24.22.0) is dated October 14;
+its version alone is not evidence that the October 15 Undici advisories are fixed.
+
+Replacing the Node server with static hosting is not a drop-in runtime change.
+The current server supplies runtime configuration and locale selection and sets
+nonce-based CSP and other response headers. Any such migration must preserve
+those contracts and receive the relevant browser and security acceptance checks.
+No runtime exception or hosting migration is approved by this investigation.
 
 ## Builder scan limitation
 

@@ -13,6 +13,9 @@ identifier. This configuration contains no provider subscription credentials.
 ## Setup
 
 - The app must let the driver enter a backend base URL before signing in.
+- The address field must retain a visible localized label when it contains a value.
+- Setup, sign-in, and account controls must retain their content padding in
+  addition to device safe-area insets. Text and fields must not touch screen edges.
 - The backend must expose a public, versioned client-configuration endpoint at
   `GET /v1/client-configuration`. Its Huma contract must return the configured
   OIDC issuer and mobile public client identifier in a `data` envelope.
@@ -44,6 +47,10 @@ identifier. This configuration contains no provider subscription credentials.
   the server. Native session credentials remain in platform secure storage.
 - Changing server must sign out locally, clear the map's in-memory observations,
   and return to setup. Remote revocation is best effort and must use the old API.
+- Sign-out must immediately retire the current session scope and clear phone and
+  car presentation. Pending refresh or profile responses must not restore it.
+  The app must retain backend settings and permit a fresh sign-in only after
+  secure storage disposal completes. A disposal failure must keep access closed.
 - In-flight work from an old connection must not change the new connection or
   write credentials into its storage namespace.
 - Restoring a saved connection must not require network discovery before restoring

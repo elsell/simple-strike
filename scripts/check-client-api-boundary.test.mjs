@@ -27,6 +27,8 @@ function check(files) {
 }
 
 const bypasses = {
+  'apps/mobile/src/safe-area-subpath.ts': "import { send } from 'react-native-safe-area-context/transport'; send('/v1/me');",
+  'apps/mobile/src/safe-area-lookalike.ts': "import { send } from 'react-native-safe-area-context-extra'; send('/v1/me');",
   'apps/web/src/lib/direct.ts': "fetch(apiURL + '/v1/me');",
   'apps/web/src/lib/computed.ts': "(globalThis as any)['fe' + 'tch'](apiURL + '/v1/me');",
   'apps/web/src/lib/window.ts': "window['fetch'](apiURL + '/v1/me');",
@@ -90,7 +92,7 @@ for (const path of Object.keys(bypasses).filter((path) =>
 
 result = check({
   'packages/api-client/package.json': '{"name":"@sample/api-client"}',
-  'apps/mobile/app/index.tsx': "export default function Home() { return <></>; }",
+  'apps/mobile/app/index.tsx': "import { SafeAreaView } from 'react-native-safe-area-context'; export default function Home() { return <SafeAreaView />; }",
   'apps/web/src/lib/generated.ts': "import { createSessionApiClient } from '@sample/api-client'; export const session = createSessionApiClient(base, token);",
 });
 assert.equal(result.status, 0, result.stderr);
