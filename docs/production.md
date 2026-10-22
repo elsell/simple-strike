@@ -49,3 +49,27 @@ Required preparation:
 
 Scalar documentation can be disabled. Do so unless interactive production API
 documentation is intentional and its public OIDC client is registered.
+
+## Go builder update under verification
+
+The candidate builder is Red Hat Hardened Images
+`hi/go:1.26.9-builder-1792219929`, pinned to multi-platform digest
+`sha256:b4e44ef2280aace1a866614567ab6b373a4f92a971283246e74d64ae5b056c79`.
+Its Red Hat signature verified against the published `63405576.txt` key.
+
+The amd64 and arm64 SPDX inventories were read from the registry and their blob
+hashes verified. Both list Go 1.26.9. The amd64 inventory has 277 package records;
+the arm64 inventory has 281. Their SPDX blob digests are, respectively:
+
+- `sha256:63d149c72166959ab4b4094dc341aa8d9ff9b5fa22a966aaf00bfb5b792a1d9d`
+- `sha256:445a36cd32996bcd27c7d4a95d5245b3b987b99ac1e3a12379bfedcef2525285`
+
+Signature and inventory checks do not prove absence of vulnerabilities. The CVE
+report review, resolved application vulnerability scan, and production-image
+build verification remain required before this candidate is ready to merge.
+
+The initial Grype scans of both platform SBOMs report high-severity matches.
+The inventories include both source versions and RPM release versions, so a
+package-name match alone is not sufficient to decide whether a backported fix
+is present. Findings against the installed image and the final runtime image
+remain unresolved. No scanner exclusion or vulnerability waiver has been added.

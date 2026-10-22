@@ -77,7 +77,7 @@ The release gate runs Go vulnerability analysis and the package-manager audit
 against the resolved dependency graph. CI has least-privilege permissions,
 bounded runtime, and cancels superseded work. High or critical dependency
 findings at any severity fail delivery rather than being silently accepted.
-The API dependency graph pins `golang.org/x/net v0.55.0`, excluding the
+The API dependency graph pins `golang.org/x/net v0.60.0`, excluding the
 GO-2026-5026-affected v0.53.0 release from generated modules and images.
 Release image scans use the locally installed Grype 0.111.1 executable from a
 checksum-verified immutable release archive. Scanner bootstrap must not execute a
@@ -215,12 +215,6 @@ and `expo-linking 55.0.16`. Their compensating checks are exact pins, resolved
 lockfile review, a clean vulnerability audit, Expo compatibility validation,
 mobile type checking, and live OIDC/API acceptance as applicable.
 
-The generated API directly pins `google.golang.org/grpc 1.82.1` to remove
-GO-2026-6061 from its callable HTTP/2 and xDS graph. Because that security fix
-is inside the normal fourteen-day observation window, its exact reviewed age
-exception is compensated by generated Go tests, race tests, `govulncheck`, live
-API/SpiceDB acceptance, Docker builds, and the hosted generation matrix.
-
 The structural gate rejects oversized handwritten Go files, mocks, ad hoc print
 calls, direct SQL helpers, environment reads outside configuration/bootstrap,
 floating CI action references, and container images without immutable digests.
@@ -264,3 +258,175 @@ acceptance exercises bridge-network service discovery and the OIDC backchannel
 without weakening public issuer validation. Acceptance cleanup removes its
 project-scoped containers, volumes, and locally built images so repeated clean
 runs do not exhaust a development or CI host.
+
+## Demo slice security gate repairs
+
+The demo slice must not publish with the inherited vulnerable Go graph. The
+compiler must use Go 1.26.9 or a later reviewed patch. The API graph must use
+`golang.org/x/net` v0.60.0, `golang.org/x/text` v0.42.0, OpenTelemetry v1.45.0,
+and gRPC v1.83.2 or later reviewed fixed releases. These pins address the current
+Go vulnerability database findings, including GO-2026-6617, GO-2026-6629,
+GO-2026-6505, GO-2026-6443, and GO-2026-6348. Verification must include the resolved
+graph vulnerability scan, application and boundary tests, and image build checks.
+The exact `golang.org/x/net` v0.60.0 security release has an age exception because
+it fixes reachable HTTP/2 denial-of-service findings. The module proxy records its
+release on 2026-10-08. The allowlist requires application tests, race tests, the
+resolved vulnerability scan, live API/SpiceDB acceptance, and Docker build checks
+before merge. This exception does not waive those checks.
+
+The configured OTLP endpoint is a collector base URL. The adapter must append
+`/v1/traces` and `/v1/metrics` explicitly, preserving any configured path prefix,
+so exporter version changes cannot send both signal types to the collector root.
+
+## SDK 55 native compatibility repair
+
+Native compilation must use the SDK 55 patch set reported by Expo compatibility
+validation: Expo 55.0.31, auth-session 55.0.18, crypto 55.0.19, dev-client 55.0.40,
+linking 55.0.17, localization 55.0.19, router 55.0.18, secure-store 55.0.18,
+system-ui 55.0.22, updates 55.0.33, and web-browser 55.0.20. All versions must be
+exactly pinned. The frozen lockfile, native compatibility check, type checks,
+OIDC client tests, package audit, age gate, and native builds must verify this
+update. This repairs a demonstrated native build blocker, not an SDK major upgrade.
+
+Transitive Expo overrides must match the updated SDK requirements. In particular,
+auth-session must resolve the same crypto and web-browser versions as the app.
+The exact config, prebuild, schema, asset, file-system, and Babel pins must satisfy
+the new Expo and CLI manifests. Doctor must reject duplicate native modules.
+
+The JavaScript security gate must use fixed releases for the advisories found in
+the inherited lockfile. Required minimums are shell-quote 1.11.0, fast-uri 3.1.8,
+brace-expansion 5.0.12, js-yaml 3.15.2 or 4.3.2 within its existing major version,
+nanoid 3.3.18, browserslist 4.28.7, xmldom 0.8.15 or 0.9.12 within its existing
+minor series, image-size 2.0.3, devalue 5.9.3,
+source-map-js 1.2.2, compression 1.8.2, Joi 17.13.8, PostCSS 8.5.23,
+SvelteKit 2.70.2, decode-uri-component 0.5.0, baseline-browser-mapping 2.11.0,
+and moment 2.31.0. Preserve the legacy callable brace-expansion
+adapter and verify both legacy and modern consumers. These changes require a
+clean package audit, the age gate, workspace tests and builds, native compatibility
+validation, and native compilation before merge.
+
+The upstream advisories list no patched release for
+[node-forge](https://github.com/advisories/GHSA-86w9-cpqp-85rv) or
+[braces](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), as checked on
+2026-10-18. Their upstream advisory records remain active. Local treatment is
+defined below.
+Do not invent package versions or silently suppress the audit. Resolve active
+findings with a verified upstream release or a separately reviewed backport before
+the merge gate passes.
+
+The CVE authority rejected `CVE-2026-97058` for `sprintf-js` on 2026-10-12.
+The [immutable CVE record](https://github.com/CVEProject/cvelistV5/blob/c3f6773766e2cf1dc050bfff2d59b236c86bb687/cves/2026/97xxx/CVE-2026-97058.json)
+records state `REJECTED` and the authority's rejection reason. On 2026-10-18,
+GitHub still reported `GHSA-hp3w-g68c-fv3c` with a null `withdrawn_at`, so the
+raw package audit still fails on it. Treat this as a feed discrepancy, not an
+unresolved vulnerability or a reason to change numeric formatting semantics.
+The reviewed classification below identifies the exact advisory and preserves
+the raw scan result and rejection evidence.
+
+The decode-uri-component 0.5.0 security release is available. Its reviewed patch
+must change only module packaging so existing CommonJS query-string consumers
+receive the callable decoder. The upstream decoding algorithm must remain intact.
+Verify valid Unicode and malformed percent-encoded input through the installed
+query-string consumer, with a bounded subprocess timeout. Verify CommonJS and
+ES module access to the decoder.
+
+### RSA backport candidate
+
+The unmerged [upstream fix](https://github.com/digitalbazaar/forge/pull/1152)
+at commit `ceba34402e329f0365134f23fe19898756527d65` adds the missing nested
+DigestAlgorithm element-count check. An isolated test on 2026-10-17 reproduced
+acceptance of its malformed signature with the unmodified 1.4.0 package, using
+default verification options. The candidate rejected that signature and accepted
+valid SHA-256, SHA-384, and SHA-512 signatures while rejecting altered messages.
+The upstream RSA suite passed against the isolated candidate: 101 passing and
+four upstream pending cases, using Mocha 11.7.5. The dependency backport must
+contain only the upstream nested element-count validation. An installed-consumer
+regression check must reject the published malformed-signature vector, accept
+valid signatures, and reject altered messages. The completed review and exact
+security-gate treatment are recorded below. The raw audit finding remains visible;
+it must not be silently excluded.
+
+### Reviewed JavaScript audit findings
+
+The security gate must retain the unmodified package-audit JSON in
+`.bin/pnpm-audit.json` and print each reviewed finding. It may classify only these
+exact findings separately from unresolved vulnerabilities:
+
+- `GHSA-hp3w-g68c-fv3c`, package `sprintf-js`, versions 1.0.3 or 1.1.3: rejected
+  CVE, with the immutable authority record linked above.
+- `GHSA-86w9-cpqp-85rv`, package `node-forge`, version 1.4.0: reviewed upstream
+  backport. The patch SHA-256 must equal
+  `2798686e4488058ad81c3b8e32eb763c0feff21f4c717ce4d13b6ef2432cd5b8`, every locked
+  consumer must select that patch, and the installed-consumer regression must pass.
+
+A read-only review on 2026-10-18 confirmed the RSA patch matches the upstream
+executable change, independently verified the public malicious-signature fixture,
+and checked all six lockfile consumer references. The installed Expo consumer
+regression also passed. Older unused package-store entries are not proof of active
+resolution; frozen installs and the actual consumer resolver remain authoritative.
+
+The gate must reject malformed audit output, audit execution failures, altered or
+missing backport evidence, mismatched versions or package names, and all other
+advisories. The active `braces` finding must fail unless every condition of the narrowly
+approved temporary exception below is satisfied. This is not a general advisory
+allowlist.
+
+### Approved temporary braces build-tool exception
+
+On 2026-10-18, the iOS export at the source state of `858f87f` produced a Hermes
+source map with 1,071 mapped sources. Neither `braces` nor `micromatch` appeared.
+The production web dependency deployment, produced with the Dockerfile's
+`pnpm --filter @simple-strike/web deploy --legacy --prod` command, contained 71
+packages and neither package. These checks do not prove native rendering or a
+clean production image scan. The Go API does not execute JavaScript dependencies.
+
+The lockfile introduces `braces@3.0.3` through `micromatch@4.0.8`, used by Metro,
+Jest, and file-globbing build tools. The raw audit still reports
+`GHSA-vfj7-8cjw-p6xm`, and the authority still publishes `CVE-2026-93687`.
+The maintainer disputes the issue, but that does not withdraw the advisory.
+No upstream fixed release has been verified.
+
+The user approved this exception on 2026-10-18. It covers only
+`GHSA-vfj7-8cjw-p6xm` in `braces@3.0.3`, in development/build tooling. It expires
+at 00:00 UTC on 2026-11-17. The raw finding must remain visible. New advisories,
+other versions, runtime inclusion, and arbitrary untrusted glob patterns are not
+approved. Build and development services must use trusted repository inputs.
+
+Each security-gate run that applies the exception must create a fresh iOS export
+with source maps and a fresh production web build and dependency deployment. It
+must inspect the iOS mapped sources, web bundle mapped sources, and deployed
+package manifests. Empty web source maps may cover only empty chunks or static
+import/re-export shims; executable code requires mapped sources or an exact
+reviewed generated-helper fingerprint. Neither `braces` nor `micromatch` may appear. Missing, malformed,
+or unsupported evidence must fail closed. A previous scan or a manually supplied
+success marker must not enable the exception. Expiry must use the current UTC date.
+The check must still fail on any other unresolved finding. This exception does
+not waive native acceptance, image review, or any other merge requirement.
+
+### Native demo verification artifact
+
+An affected successful hosted iOS build must publish its unsigned simulator app
+and mechanically derived Git revision as a short-lived CI artifact. The archive
+must preserve the application bundle structure. It must not include signing
+material, build caches, or backend credentials. This development build requires
+Metro and the demo backend. Artifact availability does not prove launch, map
+interaction, device signing, or CarPlay acceptance.
+
+The temporary production-dependency deployment used by the audit gate must run
+in an isolated workspace copy. It must not change the installed development
+dependency graph used by contract generation and subsequent checks.
+
+### API runtime certificate refresh
+
+The API runtime uses `hi/static:latest-1790234989` at multi-platform digest
+`sha256:08d039e8b4f70c0b22118acfff9ada93fc7f9d349e5c5ac991fbdf6b876eea91`.
+This September 24, 2026 build exceeds the fourteen-day observation period.
+It replaces the older image whose certificate package triggered CVE-2023-32803.
+The reviewed amd64 vendor SBOM contains
+`ca-certificates-bundle 2026.2.90_v9.0.317-1.hum1` and timezone data `2026c-2.hum1`.
+On October 18, Grype 0.111.1 found no vulnerabilities in direct scans of the
+amd64 and arm64 image manifests with its October 17 database. The index signature verified with Red Hat's
+`63405576` public key, using the vendor-documented verification command.
+The image retains the minimal static-runtime role. This base-image check does
+not establish a clean final application image or replace exact-candidate
+production-image and live acceptance checks. The web runtime review remains open.

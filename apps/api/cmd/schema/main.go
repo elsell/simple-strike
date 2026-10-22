@@ -12,6 +12,11 @@ import (
 )
 
 func main() {
+	feedAccess := os.Getenv("SIMPLE_STRIKE_FEED_ACCESS")
+	if feedAccess != "" && feedAccess != "authenticated" {
+		slog.Error("invalid feed access configuration")
+		os.Exit(1)
+	}
 	endpoint := os.Getenv("SIMPLE_STRIKE_SPICEDB_ENDPOINT")
 	token := os.Getenv("SIMPLE_STRIKE_SPICEDB_SCHEMA_TOKEN")
 	insecureTransport, parseErr := strconv.ParseBool(os.Getenv("SIMPLE_STRIKE_SPICEDB_INSECURE"))
@@ -29,6 +34,15 @@ func main() {
 	for {
 		err = authorizer.WriteSchema(ctx, spice.RequiredSchema)
 		if err == nil {
+			if feedAccess == "authenticated" {
+				err = authorizer.WriteRelationship(ctx, "lightning_feed", "configured", "viewer", "user", "*")
+			} else {
+				err = authorizer.DeleteRelationship(ctx, "lightning_feed", "configured", "viewer", "user", "*")
+			}
+			if err != nil {
+				slog.Error("feed permission bootstrap failed", "error", err)
+				os.Exit(1)
+			}
 			return
 		}
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {

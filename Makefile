@@ -18,6 +18,10 @@ generate:
 	pnpm --dir packages/api-client generate
 
 check:
+	node scripts/check-brace-compat.mjs
+	node scripts/check-uri-decoder.mjs
+	node scripts/check-rsa-verification.mjs
+	bash scripts/verify-lightning-extension.sh
 	./scripts/plan-release_test.sh
 	./scripts/test-start-postgres-for-acceptance.sh
 	./scripts/test-install-docker-buildx.sh
@@ -46,7 +50,9 @@ security:
 	mkdir -p .bin
 	cd tools && go build -o ../.bin/govulncheck golang.org/x/vuln/cmd/govulncheck
 	cd apps/api && ../../.bin/govulncheck ./...
-	pnpm audit --audit-level low
+	python3 scripts/test-runtime-artifacts.py
+	python3 scripts/test-js-audit.py
+	python3 scripts/check-js-audit.py
 	python3 scripts/check-ruby-vulnerabilities.py
 
 verify: check race dependency-age security

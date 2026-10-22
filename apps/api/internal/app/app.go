@@ -8,6 +8,7 @@ import (
 	"github.com/elsell/simple-strike/apps/api/internal/domain/audit"
 	"github.com/elsell/simple-strike/apps/api/internal/domain/identity"
 	"github.com/elsell/simple-strike/apps/api/internal/ports"
+	lightningports "github.com/elsell/simple-strike/apps/api/pkg/lightning/ports"
 	"github.com/google/uuid"
 	"net/mail"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 func newID() string { return uuid.NewString() }
 
 type App struct {
+	LightningSource          lightningports.Source
 	Auth                     ports.Authenticator
 	IdentityVerifier         ports.IdentityTokenVerifier
 	Sessions                 ports.Sessions

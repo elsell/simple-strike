@@ -169,3 +169,8 @@ export function isValidSessionCredential(value: unknown): value is SessionCreden
 export function retainedSessionExpiry(value: unknown, fallback: string): string {
   return isValidSessionCredential(value) ? value.expiresAt : fallback;
 }
+
+export { MapSession, type MapPosition, type MapSnapshot } from './map-session';
+export { LightningFeed, readLightningWithSession, type FeedSnapshot, type FeedSource, type FeedObserver } from './lightning-feed';
+export { RecentLightning, type RecentSnapshot } from './recent-lightning';
+export { closestStrike, distanceMeters, type Strike, type StrikeDistance, type Eligibility, type Clock } from './closest-strike';

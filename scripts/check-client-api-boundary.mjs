@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import ts from '../apps/web/node_modules/typescript/lib/typescript.js';
 
 const root = path.resolve(process.argv[2] ?? '.');
-const sourceRoots = ['apps/web/src', 'apps/mobile/app', 'apps/mobile/src'];
+const sourceRoots = ['apps/web/src', 'apps/mobile/app', 'apps/mobile/src', 'apps/mobile/modules'];
 const extensions = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.svelte']);
 const runtimeSourceSubstitutions = new Map([
   ['.js', ['.ts', '.tsx', '.js', '.jsx']],
@@ -40,6 +40,7 @@ const allProviderImports = new Set([...providerImports.values()].flatMap((values
 const safeGlobals = new Set([
   'Boolean', 'Date', 'Error', 'JSON', 'Math', 'Number', 'Object', 'Promise', 'Set', 'URL',
   'clearTimeout', 'crypto', 'setTimeout',
+  'AbortController', 'requestAnimationFrame', 'cancelAnimationFrame',
 ]);
 const safeWindowMembers = new Set(['location', 'sessionStorage']);
 const browserGlobalReferences = new Set([
@@ -228,7 +229,8 @@ function belowRoot(file, sourceRoot) {
 }
 
 function resolveImportBase(base) {
-  const explicitExtension = path.extname(base);
+  const suffix = path.extname(base);
+  const explicitExtension = ['.ios', '.android', '.native'].includes(suffix) ? '' : suffix;
   if (explicitExtension && !extensions.has(explicitExtension)) return undefined;
   const substitutions = runtimeSourceSubstitutions.get(explicitExtension);
   const candidates = explicitExtension
@@ -242,6 +244,7 @@ function resolveRelativeImport(importer, specifier) {
 }
 
 function importAllowed(specifier, relative, file) {
+  if (specifier === 'expo') return relative.startsWith('apps/mobile/modules/');
   if (specifier === '$env/dynamic/private') return relative === 'apps/web/src/lib/server/config.ts';
   if (specifier === '$lib' || specifier.startsWith('$lib/')) {
     if (!relative.startsWith('apps/web/src/')) return false;

@@ -33,28 +33,32 @@ func TestMetricsRequireDedicatedCredential(t *testing.T) {
 }
 
 func TestOpenTelemetryExportsRealTracesAndMetrics(t *testing.T) {
-	var traces, metrics atomic.Int32
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/v1/traces":
-			traces.Add(1)
-		case "/v1/metrics":
-			metrics.Add(1)
-		default:
-			t.Errorf("unexpected OTLP path %s", r.URL.Path)
-		}
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-	telemetry, err := NewOpenTelemetry(context.Background(), server.URL, "test-api", true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	telemetry.Observe(context.Background(), ports.ProbeEvent{Name: "resource.created", Outcome: "succeeded"})
-	if err := telemetry.Shutdown(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if traces.Load() == 0 || metrics.Load() == 0 {
-		t.Fatalf("OTLP exporters did not flush: traces=%d metrics=%d", traces.Load(), metrics.Load())
+	for _, prefix := range []string{"", "/collector/"} {
+		t.Run(prefix, func(t *testing.T) {
+			var traces, metrics atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch strings.TrimPrefix(r.URL.Path, strings.TrimRight(prefix, "/")) {
+				case "/v1/traces":
+					traces.Add(1)
+				case "/v1/metrics":
+					metrics.Add(1)
+				default:
+					t.Errorf("unexpected OTLP path %s", r.URL.Path)
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			defer server.Close()
+			telemetry, err := NewOpenTelemetry(context.Background(), server.URL+prefix, "test-api", true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			telemetry.Observe(context.Background(), ports.ProbeEvent{Name: "resource.created", Outcome: "succeeded"})
+			if err := telemetry.Shutdown(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			if traces.Load() == 0 || metrics.Load() == 0 {
+				t.Fatalf("OTLP exporters did not flush: traces=%d metrics=%d", traces.Load(), metrics.Load())
+			}
+		})
 	}
 }

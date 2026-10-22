@@ -87,6 +87,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lightning/strikes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read recent observations from the configured source */
+        get: operations["recent-lightning"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -289,6 +306,29 @@ export interface components {
              */
             readonly $schema?: string;
             data: components["schemas"]["InvitationDTO"];
+        };
+        LightningDataDTO: {
+            /** @enum {string} */
+            mode: "demo" | "live";
+            observations: components["schemas"]["LightningObservationDTO"][];
+        };
+        LightningObservationDTO: {
+            id: string;
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        LightningOutputBody: {
+            /**
+             * Format: uri
+             * @description A URL to the JSON Schema for this object.
+             * @example https://example.com/schemas/LightningOutputBody.json
+             */
+            readonly $schema?: string;
+            data: components["schemas"]["LightningDataDTO"];
         };
         MeOutputBody: {
             /**
@@ -522,6 +562,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["APIError"];
+                };
+            };
+        };
+    };
+    "recent-lightning": {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LightningOutputBody"];
+                };
             };
             /** @description Error */
             default: {

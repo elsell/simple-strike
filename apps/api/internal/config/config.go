@@ -11,6 +11,7 @@ import (
 )
 
 type Config struct {
+	LightningSource                                                                                                                                                                       string
 	HTTPAddr, PublicBaseURL, DatabaseDSN, CursorSigningKey, OIDCIssuer, OIDCBackchannelURL, OIDCDocsClientID, OIDCDocsRedirectURI, SpiceDBEndpoint, SpiceDBToken, AccountProvisioningMode string
 	MetricsBearerToken                                                                                                                                                                    string
 	OTLPHTTPEndpoint, OTelServiceName                                                                                                                                                     string
@@ -36,6 +37,7 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 	c := Config{
+		LightningSource:                value("SIMPLE_STRIKE_LIGHTNING_SOURCE", "disabled"),
 		HTTPAddr:                       value("SIMPLE_STRIKE_HTTP_ADDR", ":8080"),
 		PublicBaseURL:                  os.Getenv("SIMPLE_STRIKE_PUBLIC_BASE_URL"),
 		DatabaseDSN:                    os.Getenv("SIMPLE_STRIKE_DATABASE_DSN"),
@@ -117,6 +119,9 @@ func validateRawEnvironment() error {
 }
 
 func (c Config) validate() error {
+	if c.LightningSource != "" && c.LightningSource != "disabled" && c.LightningSource != "demo" && c.LightningSource != "external" {
+		return errors.New("unsupported lightning source")
+	}
 	if c.PublicBaseURL == "" || c.DatabaseDSN == "" || len(c.CursorSigningKey) < 32 || len(c.MetricsBearerToken) < 32 || c.OIDCIssuer == "" || len(c.OIDCAudiences) == 0 || c.SpiceDBEndpoint == "" {
 		return errors.New("database, OIDC audiences, and SpiceDB configuration is required")
 	}
