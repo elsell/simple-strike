@@ -47,6 +47,22 @@ Validation proves this scheme, the iOS bundle identifier, and Android package
 share the same generated native identity. When changing a LAN issuer, change the
 provider issuer and API issuer together. Plain HTTP is development-only.
 
+## Connect to a server
+
+Enter the backend URL on first launch. The app requests public configuration from
+`GET /v1/client-configuration`, then uses the configured OIDC provider for sign-in.
+Set `SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID` on the API server to the public native
+client ID. Include that client ID in `SIMPLE_STRIKE_OIDC_AUDIENCES`. The standard
+Compose stack supplies `simple-strike-mobile`. The endpoint returns 503 if the
+mobile client is not configured. It does not disclose provider credentials.
+
+Release connections require HTTPS. The build-time API URL only prefills setup.
+Saved connections survive restart and do not require discovery to restore an
+offline session. Account settings show the server address and a Change Server
+button. Changing server removes the local session and clears displayed strikes.
+Sessions are stored separately for each API URL, exact issuer, and client ID.
+Old unscoped prototype sessions are not imported. Sign in again after upgrading.
+
 ## What each check proves
 
 ```sh

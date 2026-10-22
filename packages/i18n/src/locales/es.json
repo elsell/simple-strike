@@ -48,5 +48,11 @@
   "map.minutesAgo_other": "Hace {{count}} minutos",
   "map.minutesAgo_one": "Hace {{count}} minuto",
   "auth.account": "Cuenta",
-  "common.close": "Cerrar"
+  "common.close": "Cerrar",
+  "connection.address": "URL del servidor",
+  "connection.description": "Conéctate a tu servidor de Simple Strike. Tu servidor proporciona los datos de rayos y el servicio de inicio de sesión.",
+  "connection.connect": "Conectar",
+  "connection.change": "Cambiar servidor",
+  "connection.failed": "No se puede conectar. Comprueba la dirección del servidor e inténtalo de nuevo.",
+  "connection.storageError": "No se puede leer o guardar la conexión. Inténtalo de nuevo."
 }

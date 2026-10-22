@@ -74,6 +74,7 @@ services:
       SIMPLE_STRIKE_INVITATION_ADMIN_IDENTITIES: ${SIMPLE_STRIKE_INVITATION_ADMIN_IDENTITIES:-}
       SIMPLE_STRIKE_OIDC_ISSUER: http://localhost:5556/dex
       SIMPLE_STRIKE_OIDC_BACKCHANNEL_URL: http://dex:5556/dex
+      SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID: ${SIMPLE_STRIKE_MOBILE_OIDC_CLIENT_ID:-simple-strike-mobile}
       SIMPLE_STRIKE_OIDC_AUDIENCES: simple-strike-web,simple-strike-mobile,simple-strike-docs
       SIMPLE_STRIKE_OIDC_DOCS_CLIENT_ID: simple-strike-docs
       SIMPLE_STRIKE_OIDC_DOCS_REDIRECT_URI: http://localhost:8080/docs

@@ -48,5 +48,11 @@
   "map.minutesAgo_other": "{{count}} minutes ago",
   "map.minutesAgo_one": "{{count}} minute ago",
   "auth.account": "Account",
-  "common.close": "Close"
+  "common.close": "Close",
+  "connection.address": "Backend URL",
+  "connection.description": "Connect to your Simple Strike server. Your server supplies the lightning data and sign-in service.",
+  "connection.connect": "Connect",
+  "connection.change": "Change Server",
+  "connection.failed": "Cannot connect. Check the server address and try again.",
+  "connection.storageError": "Cannot read or save the connection. Try again."
 }

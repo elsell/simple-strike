@@ -1,158 +1,89 @@
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import Constants from 'expo-constants';
 import { getLocales } from 'expo-localization';
-import { useEffect, useState } from 'react';
-import { Button, Modal, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { createSessionApiClient, sessionExpiryAdvanced, sessionRefreshDelay, sessionRefreshLeadMs } from '@simple-strike/api-client';
-import { classifySessionFailure, isSessionFailure, refreshSessionCredential, sessionCredentialFromResponse, sessionRetryDelay, validateSessionCredential, type SessionAccessState, type SessionFailure } from '@simple-strike/client-core';
+import { useEffect, useRef, useState } from 'react';
+import { Button, SafeAreaView, StyleSheet, Text, TextInput } from 'react-native';
+import { createConfigurationApiClient } from '@simple-strike/api-client';
+import { backendConnection, connectionIdentity, normalizeBackendURL, SessionScope, type ClientRuntimeConfig } from '@simple-strike/client-core';
 import { type MessageKey } from '@simple-strike/i18n';
 import { createDeviceTranslator } from '../src/i18n';
 import { loadMobileConfig } from '../src/config';
-import { activateExchangedSession } from '../src/session-establishment';
-import { restoreStoredSession } from '../src/session-restoration';
-import { useProviderSignIn } from '../src/provider-auth';
-import LightningScreen from '../src/LightningScreen';
+import ConnectedHome from '../src/ConnectedHome';
 
-const { apiURL, oidcClientId: clientId, oidcIssuer: issuer } = loadMobileConfig(Constants.expoConfig?.extra);
-const storageKey = 'application_session';
+const defaults = loadMobileConfig(Constants.expoConfig?.extra);
+const settingsKey = 'backend_connection_v1';
 const i18n = createDeviceTranslator(getLocales);
-
-type Session = { token: string; expiresAt: string };
-type Profile = { id: string; email: string; displayName: string };
-class LocalizedError extends Error { constructor(readonly key: MessageKey) { super(key); } }
-
-async function saveSession(session: Session | null) {
-  if (session) await SecureStore.setItemAsync(storageKey, JSON.stringify(session));
-  else await SecureStore.deleteItemAsync(storageKey);
+type Connection = { config: ClientRuntimeConfig; scope: SessionScope };
+async function prepare(config: ClientRuntimeConfig): Promise<Connection> {
+  const hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, connectionIdentity(config));
+  return { config, scope: new SessionScope(`application_session_${hash}`, {
+    read: key => SecureStore.getItemAsync(key),
+    write: (key, value) => SecureStore.setItemAsync(key, value),
+    remove: key => SecureStore.deleteItemAsync(key),
+  }) };
 }
-async function refreshSession(session: Session): Promise<Session> {
-  return refreshSessionCredential(
-    session,
-    async (current) => createSessionApiClient(apiURL, () => current.token).refresh(),
-    async (replacement) => saveSession(replacement),
-  );
-}
-function localizedFailure(cause: unknown, fallback: MessageKey): MessageKey { return cause instanceof LocalizedError ? cause.key : fallback; }
 
 export default function Home() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [accessState, setAccessState] = useState<SessionAccessState>('authentication_required');
-  const [sessionRenewable, setSessionRenewable] = useState(true);
-  const [retryAttempt, setRetryAttempt] = useState(0);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [connection, setConnection] = useState<Connection | null>(null);
+  const [address, setAddress] = useState(defaults.apiURL);
   const [ready, setReady] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  const [errorKey, setErrorKey] = useState<MessageKey | null>(null);
-  const providerSignIn = useProviderSignIn(issuer, clientId, 'simplestrike');
-
-  async function activate(next: Session, renewable = true) {
-    await saveSession(next); setSessionRenewable(renewable); setSession(next);
-    const nextProfile = await validateSessionCredential<Profile>(next, async (current) =>
-      createSessionApiClient(apiURL, () => current.token).profile(),
-    );
-    setProfile(nextProfile);
-    setAccessState('authenticated_online');
-    setRetryAttempt(0);
-  }
-  async function clearSession(message: MessageKey | null = null, state: SessionAccessState = 'authentication_required') {
-    const token = session?.token;
-    await saveSession(null); setAccountOpen(false); setSession(null); setRetryAttempt(0); setProfile(null); setAccessState(state); setErrorKey(message);
-    if (token) try { await createSessionApiClient(apiURL, () => token).revoke(); } catch { /* local disposal is authoritative */ }
-  }
-  async function handleSessionFailure(cause: unknown, current: Session) {
-    const failure: SessionFailure = isSessionFailure(cause) ? cause : { kind: 'network' };
-    const decision = classifySessionFailure(failure);
-    if (decision.discardCredential) {
-      await clearSession(decision.state === 'local_session_unreadable' ? 'errors.localSessionUnreadable' : 'errors.sessionExpired', decision.state);
-      return;
-    }
-    await saveSession(current); setSession(current); setAccessState('authenticated_offline');
-    if (!decision.retryable) { setSessionRenewable(false); setRetryAttempt(0); }
-    if (decision.retryable) setRetryAttempt((attempt) => attempt + 1);
-    setErrorKey(decision.retryable ? 'errors.temporarilyUnavailable' : 'errors.apiRejected');
-  }
-
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<MessageKey | null>(null);
+  const pending = useRef<AbortController | null>(null);
   useEffect(() => {
-    void restoreStoredSession({
-      read: () => SecureStore.getItemAsync(storageKey),
-      now: () => Date.now(),
-      refreshLeadMs: sessionRefreshLeadMs,
-      refresh: refreshSession,
-      expiryAdvanced: sessionExpiryAdvanced,
-      activate,
-      handleFailure: handleSessionFailure,
-      handleUnreadable: () => clearSession('errors.localSessionUnreadable', 'local_session_unreadable'),
-    }).finally(() => setReady(true));
+    let active = true;
+    void (async () => {
+      try {
+        const saved = await SecureStore.getItemAsync(settingsKey);
+        if (saved) {
+          const value = JSON.parse(saved);
+          const config = backendConnection(value.apiURL, { version: 1, oidcIssuer: value.oidcIssuer, oidcClientId: value.oidcClientId }, defaults.environment);
+          const restored = await prepare(config);
+          if (active) { setAddress(config.apiURL); setConnection(restored); }
+        }
+      } catch { if (active) setError('connection.storageError'); }
+      finally { if (active) setReady(true); }
+    })();
+    return () => { active = false; pending.current?.abort(); };
   }, []);
 
-  useEffect(() => {
-    if (!providerSignIn.identityToken && !providerSignIn.failed) return;
-    (async () => {
-      try {
-        if (providerSignIn.failed || !providerSignIn.identityToken) throw new LocalizedError('errors.identityTokenMissing');
-        let apiResponse: Awaited<ReturnType<ReturnType<typeof createSessionApiClient>['exchange']>>;
-        try { apiResponse = await createSessionApiClient(apiURL, () => null).exchange(providerSignIn.identityToken); }
-        catch { throw { kind: 'network' } satisfies SessionFailure; }
-        const next = sessionCredentialFromResponse(apiResponse);
-        const activationFailure = await activateExchangedSession(next, activate, saveSession);
-        if (activationFailure) await handleSessionFailure(activationFailure.failure, next);
-      } catch (cause) {
-        if (session) await handleSessionFailure(cause, session);
-        else { setAccessState('authentication_required'); setErrorKey(localizedFailure(cause, 'errors.signInFailed')); }
-      }
-      finally { providerSignIn.acknowledge(); setReady(true); }
-    })();
-  }, [providerSignIn.identityToken, providerSignIn.failed]);
+  async function connect() {
+    if (pending.current) return;
+    const controller = new AbortController();
+    pending.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    setBusy(true); setError(null);
+    try {
+      const url = normalizeBackendURL(address, defaults.environment);
+      const metadata = await createConfigurationApiClient(url).read(controller.signal);
+      const config = backendConnection(url, metadata, defaults.environment);
+      const next = await prepare(config);
+      if (controller.signal.aborted) return;
+      await SecureStore.setItemAsync(settingsKey, JSON.stringify(config));
+      if (!controller.signal.aborted) setConnection(next);
+    } catch { setError('connection.failed'); }
+    finally { clearTimeout(timeout); pending.current = null; setBusy(false); }
+  }
+  async function changeServer() {
+    if (!connection) return;
+    await connection.scope.close();
+    await SecureStore.deleteItemAsync(settingsKey);
+    setConnection(null); setError(null);
+  }
 
-  useEffect(() => {
-    if (!session) return;
-    const untilExpiry = Date.parse(session.expiresAt) - Date.now();
-    if (untilExpiry <= 0) { void clearSession('errors.sessionExpired'); return; }
-    const delay = accessState === 'authenticated_offline' && retryAttempt > 0 ? sessionRetryDelay(retryAttempt, session.expiresAt) : sessionRenewable ? sessionRefreshDelay(session.expiresAt) : untilExpiry;
-    const timer = setTimeout(() => {
-      if (!sessionRenewable && (accessState !== 'authenticated_offline' || retryAttempt === 0)) { void clearSession('errors.sessionExpired'); return; }
-      void (async () => {
-        let next: Session;
-        try { next = await refreshSession(session); }
-        catch (cause) { await handleSessionFailure(cause, session); return; }
-        try { await activate(next, sessionExpiryAdvanced(session.expiresAt, next.expiresAt)); }
-        catch (cause) { await handleSessionFailure(cause, next); }
-      })();
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [session?.token, session?.expiresAt, sessionRenewable, accessState, retryAttempt]);
-
-  if (session && ready) return <SafeAreaView style={styles.signedIn}>
-    <View style={styles.toolbar}>
-      <Text style={styles.title}>{i18n.t('app.title')}</Text>
-      <Button title={i18n.t('auth.account')} onPress={() => setAccountOpen(true)} />
-    </View>
-    {accessState === 'authenticated_offline' ? <Text style={styles.notice}>{i18n.t('auth.offline')}</Text> : null}
-    {errorKey ? <Text style={styles.notice} accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}
-    <LightningScreen key={apiURL} apiURL={apiURL} token={session.token} translator={i18n} onUnauthorized={() => void clearSession('errors.sessionExpired')} />
-    <Modal visible={accountOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setAccountOpen(false)}>
-      <SafeAreaView style={styles.account}>
-        <Text style={styles.accountTitle} accessibilityRole="header">{i18n.t('auth.account')}</Text>
-        {profile ? <Text>{i18n.t('auth.signedInAs', { name: profile.displayName || profile.email })}</Text> : null}
-        <Button title={i18n.t('auth.signOut')} onPress={() => { setAccountOpen(false); void clearSession(); }} />
-        <Button title={i18n.t('common.close')} onPress={() => setAccountOpen(false)} />
-      </SafeAreaView>
-    </Modal>
-  </SafeAreaView>;
-
-  return <SafeAreaView style={styles.account}>
-    <Text style={styles.accountTitle}>{i18n.t('app.title')}</Text>
-    <Text>{!ready ? i18n.t('common.loading') : i18n.t('auth.ready')}</Text>
-    {errorKey ? <Text accessibilityRole="alert">{i18n.t(errorKey)}</Text> : null}
-    <Button title={i18n.t('auth.signIn')} disabled={!ready || !providerSignIn.ready} onPress={() => void providerSignIn.begin()} />
+  if (connection) return <ConnectedHome key={connection.scope.key} config={connection.config} scope={connection.scope} onChangeServer={changeServer} />;
+  return <SafeAreaView style={styles.container}>
+    <Text style={styles.title} accessibilityRole="header">{i18n.t('app.title')}</Text>
+    <Text>{i18n.t('connection.description')}</Text>
+    <TextInput style={styles.input} accessibilityLabel={i18n.t('connection.address')} placeholder={i18n.t('connection.address')} value={address} onChangeText={setAddress} autoCapitalize="none" autoCorrect={false} keyboardType="url" editable={ready && !busy} />
+    {error ? <Text accessibilityRole="alert">{i18n.t(error)}</Text> : null}
+    {!ready || busy ? <Text>{i18n.t('common.loading')}</Text> : null}
+    <Button title={i18n.t('connection.connect')} disabled={!ready || busy || !address.trim()} onPress={() => void connect()} />
   </SafeAreaView>;
 }
-
 const styles = StyleSheet.create({
-  signedIn: { flex: 1, backgroundColor: '#20242a' },
-  toolbar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, minHeight: 48 },
-  title: { color: '#ffffff', fontWeight: '700', fontSize: 20 },
-  notice: { color: '#ffffff', paddingHorizontal: 16, paddingBottom: 8 },
-  account: { flex: 1, padding: 24, gap: 20 },
-  accountTitle: { fontSize: 32, fontWeight: '600' },
+  container: { flex: 1, padding: 24, gap: 20 },
+  title: { fontSize: 32, fontWeight: '600' },
+  input: { borderWidth: 1, borderColor: '#777777', borderRadius: 8, padding: 12, minHeight: 48 },
 });

@@ -2,15 +2,21 @@
 
 ## Current slice
 
-Implement the demo lightning map through the self-hosted backend and iOS client.
-Record approved behavior before coding. Resolve access and failure policies before
-implementing their boundaries. No other product slice is in progress.
+Implement backend connection setup through the self-hosted API and iOS client.
+See [connection setup](../lightning/connection.spec.md). This is the only product
+slice in active implementation.
+
+## Awaiting verification
+
+The demo-map slice remains unmerged and awaits native interaction evidence and
+its required CI and production-image checks. It is not complete. Its draft PR
+remains the base of the connection-setup work; the next slice must not merge ahead
+of that dependency. Runtime image security is the one active infrastructure blocker.
 
 ## Following slices
 
-1. Complete backend connection setup and private adapter extension documentation.
-2. Deliver optional turn-by-turn navigation and native CarPlay integration.
-3. Complete device, deployment, and Apple review preparation and verification.
+1. Deliver optional turn-by-turn navigation and native CarPlay integration.
+2. Complete device, deployment, and Apple review preparation and verification.
 
 ## External dependencies
 
@@ -27,3 +33,7 @@ or browser-PKCE acceptance. Product implementation is not yet complete.
 Local browser experiments are separate and are not native acceptance evidence.
 See [map](../lightning/map.spec.md), [data source](../lightning/data-source.spec.md),
 and [bootstrap notes](../../docs/bootstrap.md).
+
+The active slice also requires native simulator interaction evidence and final
+production-image verification. See [runtime image review](../../docs/image-review.md)
+for the current image findings and verified API base refresh.

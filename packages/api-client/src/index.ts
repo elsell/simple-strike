@@ -54,3 +54,15 @@ export function createLightningApiClient(baseUrl: string, tokenProvider: TokenPr
     },
   };
 }
+
+export function createConfigurationApiClient(baseUrl: string) {
+  const client = createApiClient(baseUrl, () => null);
+  return {
+    async read(signal?: AbortSignal) {
+      const result = await client.GET('/v1/client-configuration', { signal, redirect: 'error', credentials: 'omit' });
+      if (!result.response.ok) throw { kind: 'http', status: result.response.status };
+      if (!result.data?.data) throw new Error('BACKEND_CONFIGURATION');
+      return result.data.data;
+    },
+  };
+}
