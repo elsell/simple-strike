@@ -5,7 +5,7 @@ COPY apps/api/go.mod apps/api/go.sum* ./
 RUN go mod download
 COPY apps/api .
 RUN CGO_ENABLED=0 go build -o /out/ ./cmd/server ./cmd/schema ./cmd/migrate ./cmd/spicedb-runtime-proxy ./cmd/audit-retention
-FROM registry.access.redhat.com/hi/static:latest-1790234989@sha256:08d039e8b4f70c0b22118acfff9ada93fc7f9d349e5c5ac991fbdf6b876eea91
+FROM registry.access.redhat.com/hi/static:latest-1792647314@sha256:c51e17de4a96e3bd68361830ec54f3c43ffcf398b82765a1ce250bd4a0d99d1f
 COPY --from=build /out/server /app
 COPY --from=build /out/schema /schema
 COPY --from=build /out/migrate /migrate
