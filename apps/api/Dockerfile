@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
-FROM registry.access.redhat.com/hi/go:1.26.9-builder-1792219929@sha256:b4e44ef2280aace1a866614567ab6b373a4f92a971283246e74d64ae5b056c79 AS build
+FROM registry.access.redhat.com/hi/go:1.27.3-builder-1793769041@sha256:4df53fbf5e5475b680929a90238767c40ca2cce209037b7b01bdb4695880d8ee AS build
 WORKDIR /src
 COPY apps/api/go.mod apps/api/go.sum* ./
 RUN go mod download
